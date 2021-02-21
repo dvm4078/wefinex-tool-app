@@ -1,0 +1,3 @@
+export const GET_STAFFS = 'GET_STAFFS';
+export const GET_STAFFS_SUCCESS = 'GET_STAFFS_SUCCESS';
+export const GET_STAFFS_ERROR = 'GET_STAFFS_ERROR';

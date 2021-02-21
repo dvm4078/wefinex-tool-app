@@ -1,0 +1,18 @@
+{
+  "name": "thang-long-tool",
+  "productName": "thang-long-tool",
+  "version": "1.0.0",
+  "description": "Wefinex auto tool",
+  "main": "./main.prod.js",
+  "author": {
+    "name": "Muoi Doan",
+    "email": "dvm4078@gmail.com",
+    "url": "https://t.me/muoidoan"
+  },
+  "scripts": {
+    "electron-rebuild": "node -r ../.erb/scripts/BabelRegister.js ../.erb/scripts/ElectronRebuild.js",
+    "postinstall": "yarn electron-rebuild"
+  },
+  "license": "MIT",
+  "dependencies": {}
+}
