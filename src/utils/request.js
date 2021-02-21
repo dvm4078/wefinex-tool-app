@@ -1,4 +1,5 @@
 // import fetch from 'isomorphic-unfetch';
+import Authendication from './authendication';
 
 function parseJSON(response) {
   if (response.status === 204 || response.status === 205) {
@@ -17,6 +18,19 @@ function checkStatus(response) {
   throw error;
 }
 
+// export default function request(url, options) {
+//   return fetch(url, options).then(checkStatus).then(parseJSON);
+// }
 export default function request(url, options) {
-  return fetch(url, options).then(checkStatus).then(parseJSON);
+  // const url = `${API_ENDPOIN}${path}`;
+  return fetch(url, {
+    headers: {
+      authorization: Authendication.getToken(),
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    ...options,
+  })
+    .then(checkStatus)
+    .then(parseJSON);
 }

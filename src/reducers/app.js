@@ -1,41 +1,40 @@
-import * as TYPES from '../constants/career';
+import * as TYPES from '../constants/app';
 
 const initialState = {
   loading: false,
   error: false,
   loggedIn: false,
+  loggedInWefinex: false,
   user: null,
-  token: null,
 };
 
-const newPageReducer = (state = initialState, action) => {
+const appReducer = (state = initialState, action) => {
   switch (action.type) {
-    case TYPES.GET_CAREERS:
+    case TYPES.LOGOUT:
       return {
-        ...state,
-        page: action.queries.page,
-        loading: true,
-        errorMessage: '',
+        ...initialState,
       };
 
-    case TYPES.GET_CAREERS_SUCCESS: {
-      const newCareers = [...state.careers, ...action.careers];
-      const hasMore = newCareers.length + 1 <= action.total;
+    case TYPES.LOGIN:
+      return {
+        ...state,
+        loading: true,
+      };
+
+    case TYPES.LOGIN_SUCCESS: {
       return {
         ...state,
         loading: false,
-        hasMore,
-        total: action.total,
-        careers: newCareers,
+        user: action.user,
+        loggedIn: true,
       };
     }
 
-    case TYPES.GET_CAREERS_ERROR:
+    case TYPES.GET_USER_INFO_SUCCESS:
       return {
         ...state,
-        page: state.page - 1,
-        loading: false,
-        errorMessage: action.errorMessage,
+        user: action.user,
+        loggedIn: true,
       };
 
     default:
@@ -43,4 +42,4 @@ const newPageReducer = (state = initialState, action) => {
   }
 };
 
-export default newPageReducer;
+export default appReducer;

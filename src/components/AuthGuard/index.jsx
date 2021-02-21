@@ -15,9 +15,9 @@ function AuthGuard({ children }) {
     return <Redirect to="/login" />;
   }
 
-  if (loggedIn && user) {
-    return <Redirect to="/" />;
-  }
+  // if (loggedIn && user) {
+  //   return <Redirect to="/" />;
+  // }
 
   return <>{children}</>;
 }

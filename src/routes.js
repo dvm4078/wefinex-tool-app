@@ -1,18 +1,19 @@
 import React, { Fragment } from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
 
-// import DashboardLayout from 'layouts/DashboardLayout';
+import AdminLayout from './layouts/AdminLayout';
+import UserLayout from './layouts/UserLayout';
 // import MainLayout from 'layouts/MainLayout';
 
 import HomePage from './components/HomePage';
 import LoginPage from './components/LoginPage';
+import LoginWefinexPage from './components/LoginWefinexPage';
 import NotFoundPage from './components/NotFoundPage';
-// import DashboardPage from 'containers/DashboardPage/Loadable';
-// import AccountPage from 'containers/AccountPage/Loadable';
-// import UserListPage from 'containers/UserListPage/Loadable';
-// import CreateUserPage from 'containers/CreateUserPage/Loadable';
-// import ConfigPricePage from 'containers/ConfigPricePage/Loadable';
-// import Verify2FaPage from 'containers/Verify2FaPage/Loadable';
+import AdminUsersPage from './components/AdminUsersPage';
+import AdminGroupsPage from './components/AdminGroupsPage';
+import UserDashboardPage from './components/UserDashboardPage';
+import UserSettingsPage from './components/UserSettingsPage';
+import UserMethodsPage from './components/UserMethodsPage';
 
 import AuthGuard from './components/AuthGuard';
 import GuestGuard from './components/GuestGuard';
@@ -58,45 +59,61 @@ const routes = [
     path: '/login',
     component: LoginPage,
   },
-  // {
-  //   path: '/main',
-  //   guard: AuthGuard,
-  //   // layout: DashboardLayout,
-  //   routes: [
-  //     {
-  //       exact: true,
-  //       path: '/main/dashboard',
-  //       component: DashboardPage,
-  //     },
-  //     {
-  //       exact: true,
-  //       path: '/main/account',
-  //       component: AccountPage,
-  //     },
-  //     {
-  //       exact: true,
-  //       path: '/main/users',
-  //       component: UserListPage,
-  //     },
-  //     {
-  //       exact: true,
-  //       path: '/main/users/create',
-  //       component: CreateUserPage,
-  //     },
-  //     {
-  //       exact: true,
-  //       path: '/main/config/price',
-  //       component: ConfigPricePage,
-  //     },
-  //     {
-  //       component: () => <Redirect to="/404" />,
-  //     },
-  //   ],
-  // },
+  {
+    exact: true,
+    guard: AuthGuard,
+    path: '/login-wefinex',
+    component: LoginWefinexPage,
+  },
+  {
+    path: '/admin',
+    guard: AuthGuard,
+    layout: AdminLayout,
+    routes: [
+      {
+        exact: true,
+        path: '/admin/users',
+        component: AdminUsersPage,
+      },
+      {
+        exact: true,
+        path: '/admin/groups',
+        component: AdminGroupsPage,
+      },
+      {
+        component: () => <Redirect to="/404" />,
+      },
+    ],
+  },
+  {
+    path: '/user',
+    guard: AuthGuard,
+    layout: AdminLayout,
+    routes: [
+      {
+        exact: true,
+        path: '/user/dashboard',
+        component: UserDashboardPage,
+      },
+      {
+        exact: true,
+        path: '/user/settings',
+        component: UserSettingsPage,
+      },
+      {
+        exact: true,
+        path: '/user/methods',
+        component: UserMethodsPage,
+      },
+      {
+        component: () => <Redirect to="/404" />,
+      },
+    ],
+  },
 
   {
     path: '*',
-    // layout: MainLayout,
+    // layout: UserLayout,
     routes: [
       {
         exact: true,
