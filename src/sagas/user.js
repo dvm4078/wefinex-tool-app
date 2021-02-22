@@ -14,6 +14,7 @@ import {
   createUserSuccess,
   updateUserSuccess,
   deleteUserSuccess,
+  onError,
 } from '../actions/user';
 
 import API from './API';
@@ -37,6 +38,7 @@ function* handleGetUsers(action) {
         getUsersSuccess(response.data.data.users, response.data.data.count)
       );
     } else {
+      yield put(onError());
       notification.error({
         message: 'Lỗi!',
         description: response.data.message,
@@ -44,6 +46,7 @@ function* handleGetUsers(action) {
     }
   } catch (error) {
     console.error(error);
+    yield put(onError());
     notification.error({
       message: 'Lỗi!',
       description: error.message,
@@ -63,6 +66,7 @@ function* handleCreateUser(action) {
       const page = yield select((state) => state.user.page);
       yield put(getUsers('', page));
     } else {
+      yield put(onError());
       notification.error({
         message: 'Lỗi!',
         description: response.data.message,
@@ -70,6 +74,7 @@ function* handleCreateUser(action) {
     }
   } catch (error) {
     console.error(error);
+    yield put(onError());
     notification.error({
       message: 'Lỗi!',
       description: error.message,
@@ -92,6 +97,7 @@ function* handleUpdateUser(action) {
       const page = yield select((state) => state.user.page);
       yield put(getUsers('', page));
     } else {
+      yield put(onError());
       notification.error({
         message: 'Lỗi!',
         description: response.data.message,
@@ -99,6 +105,7 @@ function* handleUpdateUser(action) {
     }
   } catch (error) {
     console.error(error);
+    yield put(onError());
     notification.error({
       message: 'Lỗi!',
       description: error.message,
@@ -118,6 +125,7 @@ function* handleDeleteUser(action) {
       const page = yield select((state) => state.user.page);
       yield put(getUsers('', page));
     } else {
+      yield put(onError());
       notification.error({
         message: 'Lỗi!',
         description: response.data.message,
@@ -125,6 +133,7 @@ function* handleDeleteUser(action) {
     }
   } catch (error) {
     console.error(error);
+    yield put(onError());
     notification.error({
       message: 'Lỗi!',
       description: error.message,

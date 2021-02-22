@@ -43,3 +43,8 @@ export const deleteUserSuccess = (userId) => ({
   type: TYPES.DELETE_USER_SUCCESS,
   userId,
 });
+
+export const onError = (userId) => ({
+  type: TYPES.ON_ERROR,
+  userId,
+});

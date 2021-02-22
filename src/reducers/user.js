@@ -62,6 +62,13 @@ const userReducer = (state = initialState, action) => {
         loading: true,
       };
 
+    case TYPES.ON_ERROR:
+      return {
+        ...state,
+        loading: false,
+        error: true,
+      };
+
     default:
       return state;
   }

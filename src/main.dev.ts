@@ -11,10 +11,18 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import path from 'path';
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+
 import MenuBuilder from './menu';
+
+const fetch = require('node-fetch');
+const sqlite3 = require('sqlite3');
+
+const database = new sqlite3.Database('./db.sqlite3', (err) => {
+  if (err) console.error('Database opening error: ', err);
+});
 
 export default class AppUpdater {
   constructor() {
@@ -129,4 +137,53 @@ app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) createWindow();
+});
+
+const renewWefinexAccessToken = async (refreshToken) => {
+  try {
+    const response = await fetch('https://wefinex.net/api/auth/auth/token', {
+      method: 'POST',
+      body: JSON.stringify({
+        client_id: 'Botrade',
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+      }),
+    });
+    if (response.status === 200) {
+      const data = await response.json();
+      ipcMain.send('wefinex-renew-accesstoken-success', data);
+    } else {
+    }
+  } catch (error) {}
+};
+
+ipcMain.on('login-wefinex', async (event, token) => {
+  console.log('main login wefinex token', token);
+  try {
+    const response = await fetch('https://wefinex.net/api/auth/me/profile', {
+      headers: {
+        authorization: `Bearer ${token.access_token}`,
+      },
+    });
+    console.log('response', response);
+    if (response.status === 200) {
+      const data = await response.json();
+      event.reply('login-wefinex-reply', { success: true, data });
+    } else {
+      event.reply('login-wefinex-reply', {
+        success: false,
+        message: response.statusText,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    event.reply('login-wefinex-reply', {
+      success: false,
+      message: error.message,
+    });
+  }
+  // const sql = arg;
+  // database.all(sql, (err, rows) => {
+  //   event.reply('login-wefinex-reply', (err && err.message) || rows);
+  // });
 });

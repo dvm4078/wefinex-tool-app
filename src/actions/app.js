@@ -16,6 +16,11 @@ export const loginSuccess = (token, user) => ({
   user,
 });
 
+export const loginWefinexSuccess = (wefinexInfo) => ({
+  type: TYPES.LOGIN_WEFINEX_SUCCESS,
+  wefinexInfo,
+});
+
 export const getUserInfo = () => ({
   type: TYPES.GET_USER_INFO,
 });
@@ -23,4 +28,17 @@ export const getUserInfo = () => ({
 export const getUserInfoSuccess = (user) => ({
   type: TYPES.GET_USER_INFO_SUCCESS,
   user,
+});
+
+export const updatePassword = (body) => ({
+  type: TYPES.UPDATE_PASSWORD,
+  body,
+});
+
+export const updatePasswordSuccess = () => ({
+  type: TYPES.UPDATE_PASSWORD_SUCCESS,
+});
+
+export const onError = () => ({
+  type: TYPES.ON_ERROR,
 });

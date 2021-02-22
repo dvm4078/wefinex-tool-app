@@ -7,7 +7,6 @@ import UserLayout from './layouts/UserLayout';
 
 import HomePage from './components/HomePage';
 import LoginPage from './components/LoginPage';
-import LoginWefinexPage from './components/LoginWefinexPage';
 import NotFoundPage from './components/NotFoundPage';
 import AdminUsersPage from './components/AdminUsersPage';
 import AdminGroupsPage from './components/AdminGroupsPage';
@@ -60,12 +59,6 @@ const routes = [
     component: LoginPage,
   },
   {
-    exact: true,
-    guard: AuthGuard,
-    path: '/login-wefinex',
-    component: LoginWefinexPage,
-  },
-  {
     path: '/admin',
     guard: AuthGuard,
     layout: AdminLayout,
@@ -88,7 +81,7 @@ const routes = [
   {
     path: '/user',
     guard: AuthGuard,
-    layout: AdminLayout,
+    layout: UserLayout,
     routes: [
       {
         exact: true,

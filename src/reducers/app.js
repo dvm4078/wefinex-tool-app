@@ -4,8 +4,9 @@ const initialState = {
   loading: false,
   error: false,
   loggedIn: false,
-  loggedInWefinex: false,
   user: null,
+  loggedInWefinex: false,
+  wefinexInfo: null,
 };
 
 const appReducer = (state = initialState, action) => {
@@ -15,6 +16,7 @@ const appReducer = (state = initialState, action) => {
         ...initialState,
       };
 
+    case TYPES.UPDATE_PASSWORD:
     case TYPES.LOGIN:
       return {
         ...state,
@@ -30,11 +32,26 @@ const appReducer = (state = initialState, action) => {
       };
     }
 
+    case TYPES.LOGIN_WEFINEX_SUCCESS: {
+      return {
+        ...state,
+        wefinexInfo: action.wefinexInfo,
+        loggedInWefinex: true,
+      };
+    }
+
     case TYPES.GET_USER_INFO_SUCCESS:
       return {
         ...state,
         user: action.user,
         loggedIn: true,
+      };
+
+    case TYPES.UPDATE_PASSWORD_SUCCESS:
+    case TYPES.ON_ERROR:
+      return {
+        ...state,
+        loading: false,
       };
 
     default:

@@ -31,6 +31,10 @@ API.getProfile = () => {
   return API.instance.get('/auth/me');
 };
 
+API.updatePassword = (body) => {
+  return API.instance.put('/auth/update-password', body);
+};
+
 API.getUsers = (params) => {
   return API.instance.get('/user', params);
 };
@@ -45,6 +49,10 @@ API.updateUser = (params) => {
 
 API.deleteUser = (userId) => {
   return API.instance.delete(`/user/${userId}`);
+};
+
+API.getGroups = () => {
+  return API.instance.get('/group');
 };
 
 // API.updatePassword = (body) => {

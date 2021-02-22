@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Layout, Menu, Dropdown } from 'antd';
+import { Layout, Menu, Dropdown, Modal, Form, Input, Button } from 'antd';
 import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
@@ -11,14 +11,118 @@ import {
   DownOutlined,
 } from '@ant-design/icons';
 
-import { logout } from '../actions/app';
+import { logout, updatePassword } from '../actions/app';
 import Authendication from '../utils/authendication';
 
 const { Header, Sider, Content } = Layout;
 
+const layout = {
+  labelCol: { span: 8 },
+  wrapperCol: { span: 16 },
+};
+
+function ModalUpdatePassword({ visible, onOk, onCancel }) {
+  const [form] = Form.useForm();
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.app);
+
+  const onFinish = (values) => {
+    console.log(values);
+  };
+
+  const handleCancel = () => {
+    onCancel();
+  };
+
+  const handleOk = async () => {
+    try {
+      await form.validateFields([
+        'confirmPassword',
+        'oldPassword',
+        'newPassword',
+      ]);
+      const data = form.getFieldsValue(['oldPassword', 'newPassword']);
+      dispatch(updatePassword(data));
+      onOk();
+    } catch (error) {}
+  };
+
+  return (
+    <>
+      <Modal
+        title="Đổi mật khẩu"
+        visible={visible}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        footer={[
+          <Button key="back" onClick={handleCancel}>
+            Hủy bỏ
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            loading={loading}
+            onClick={handleOk}
+          >
+            Lưu
+          </Button>,
+        ]}
+      >
+        <Form {...layout} form={form} name="control-hooks" onFinish={onFinish}>
+          <Form.Item
+            name="oldPassword"
+            label="Mật khẩu cũ"
+            rules={[
+              {
+                required: true,
+                message: 'Vui lòng điền mật khẩu cũ!',
+              },
+            ]}
+          >
+            <Input type="password" />
+          </Form.Item>
+          <Form.Item
+            name="newPassword"
+            label="Mật khẩu mới"
+            rules={[
+              {
+                required: true,
+                message: 'Vui lòng điền mật khẩu mới!',
+              },
+            ]}
+          >
+            <Input type="password" />
+          </Form.Item>
+          <Form.Item
+            name="confirmPassword"
+            label="Xác nhận mật khẩu mới"
+            rules={[
+              {
+                required: true,
+                message: 'Vui lòng xác nhận mật khẩu!',
+              },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('newPassword') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject('Hai mật khẩu bạn đã nhập không khớp!');
+                },
+              }),
+            ]}
+          >
+            <Input type="password" />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
+  );
+}
+
 function UserLayout({ children }) {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.app);
+  const [openModalUpdatePassword, setOpenModalUpdatePassword] = useState(false);
 
   const [collapsed, setCollapsed] = useState(false);
 
@@ -33,14 +137,19 @@ function UserLayout({ children }) {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
+      <ModalUpdatePassword
+        visible={openModalUpdatePassword}
+        onOk={() => setOpenModalUpdatePassword(false)}
+        onCancel={() => setOpenModalUpdatePassword(false)}
+      />
       <Sider trigger={null} collapsible collapsed={collapsed}>
         <div className="logo" />
         <Menu theme="dark" mode="inline" defaultSelectedKeys={['1']}>
           <Menu.Item key="1" icon={<UserOutlined />}>
-            Thành viên
+            <Link to="/admin/users">Thành viên</Link>
           </Menu.Item>
           <Menu.Item key="2" icon={<GroupOutlined />}>
-            Nhóm
+            <Link to="/admin/groups">Nhóm</Link>
           </Menu.Item>
         </Menu>
       </Sider>
@@ -61,8 +170,9 @@ function UserLayout({ children }) {
               overlay={
                 <Menu>
                   <Menu.Item key="1">
-                    <Link to="/change-password">Đổi mật khẩu</Link>
-                    {/* <a href="http://www.taobao.com/">Đổi mật khẩu</a> */}
+                    <a onClick={() => setOpenModalUpdatePassword(true)}>
+                      Đổi mật khẩu
+                    </a>
                   </Menu.Item>
                   <Menu.Divider />
                   <Menu.Item key="3" onClick={handleLogout}>

@@ -18,11 +18,12 @@ function HomePage(props) {
   if (user.role === 'admin') {
     return <Redirect to="/admin/users" />;
   } else {
-    if (!loggedInWefinex) {
-      return <Redirect to="/login-wefinex" />;
-    } else {
-      return <Redirect to="/user/dashboard" />;
-    }
+    return <Redirect to="/user/dashboard" />;
+    // if (!loggedInWefinex) {
+    //   return <Redirect to="/login-wefinex" />;
+    // } else {
+    //   return <Redirect to="/user/dashboard" />;
+    // }
   }
 }
 
