@@ -14,8 +14,10 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import { io } from 'socket.io-client';
 
 import MenuBuilder from './menu';
+import WefinexServices from './services/wefinex';
 
 const fetch = require('node-fetch');
 const sqlite3 = require('sqlite3');
@@ -151,30 +153,25 @@ const renewWefinexAccessToken = async (refreshToken) => {
     });
     if (response.status === 200) {
       const data = await response.json();
-      ipcMain.send('wefinex-renew-accesstoken-success', data);
+      return data;
+      // ipcMain.send('wefinex-renew-accesstoken-success', data);
     } else {
+      throw new Error(response.statusText);
     }
-  } catch (error) {}
+  } catch (error) {
+    throw error;
+  }
 };
 
 ipcMain.on('login-wefinex', async (event, token) => {
   console.log('main login wefinex token', token);
   try {
-    const response = await fetch('https://wefinex.net/api/auth/me/profile', {
-      headers: {
-        authorization: `Bearer ${token.access_token}`,
-      },
+    const result = await WefinexServices.getProfile(token);
+    event.reply('login-wefinex-reply', {
+      success: true,
+      data: result.data,
+      token: result.token,
     });
-    console.log('response', response);
-    if (response.status === 200) {
-      const data = await response.json();
-      event.reply('login-wefinex-reply', { success: true, data });
-    } else {
-      event.reply('login-wefinex-reply', {
-        success: false,
-        message: response.statusText,
-      });
-    }
   } catch (error) {
     console.error(error);
     event.reply('login-wefinex-reply', {
@@ -182,8 +179,29 @@ ipcMain.on('login-wefinex', async (event, token) => {
       message: error.message,
     });
   }
-  // const sql = arg;
-  // database.all(sql, (err, rows) => {
-  //   event.reply('login-wefinex-reply', (err && err.message) || rows);
-  // });
+});
+
+ipcMain.on('start-trade', async (event, options) => {
+  console.log('main start-trade', options);
+  try {
+    const socket = io.connect('http://localhost:4567', {
+      reconnection: true,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 60000,
+      reconnectionAttempts: 'Infinity',
+      timeout: 10000,
+      query: `tid=${options.tid}`,
+    });
+    socket.on(
+      'signal',
+      ({ amount, type }) => console.log('amount', amount, 'type', type)
+      // Nhận tín hiệu sau đó bet, check kết quả, lưu log
+    );
+  } catch (error) {
+    // console.error(error);
+    // event.reply('login-wefinex-reply', {
+    //   success: false,
+    //   message: error.message,
+    // });
+  }
 });

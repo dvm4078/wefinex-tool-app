@@ -31,7 +31,10 @@ function LoginWefinex(props) {
       if (token.access_token && token.refresh_token) {
         const response = await handleLogin(token);
         dispatch(loginWefinexSuccess(response.data.d));
-        localStorage.setItem('WEFINEX_ACCESS_TOKEN', jsonToken);
+        localStorage.setItem(
+          'WEFINEX_ACCESS_TOKEN',
+          JSON.stringify(response.token)
+        );
         if (!response.success) {
           localStorage.removeItem('WEFINEX_ACCESS_TOKEN');
           notification.error({
