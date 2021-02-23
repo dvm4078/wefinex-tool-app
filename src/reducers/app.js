@@ -7,6 +7,7 @@ const initialState = {
   user: null,
   loggedInWefinex: false,
   wefinexInfo: null,
+  balance: null,
 };
 
 const appReducer = (state = initialState, action) => {
@@ -45,6 +46,19 @@ const appReducer = (state = initialState, action) => {
         ...state,
         user: action.user,
         loggedIn: true,
+      };
+
+    case TYPES.GET_BALANCE:
+      return {
+        ...state,
+        loading: true,
+      };
+
+    case TYPES.GET_BALANCE_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        balance: action.data,
       };
 
     case TYPES.UPDATE_PASSWORD_SUCCESS:

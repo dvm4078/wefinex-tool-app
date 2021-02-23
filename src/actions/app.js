@@ -42,3 +42,12 @@ export const updatePasswordSuccess = () => ({
 export const onError = () => ({
   type: TYPES.ON_ERROR,
 });
+
+export const getBalance = () => ({
+  type: TYPES.GET_GROUPS,
+});
+
+export const getBalanceSuccess = (data) => ({
+  type: TYPES.GET_GROUPS_SUCCESS,
+  data,
+});
