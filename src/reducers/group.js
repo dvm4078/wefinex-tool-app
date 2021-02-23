@@ -9,7 +9,6 @@ const initialState = {
 const groupReducer = (state = initialState, action) => {
   switch (action.type) {
     case TYPES.GET_GROUPS:
-      console.log('action.group', action.groups);
       return {
         ...state,
         loading: true,

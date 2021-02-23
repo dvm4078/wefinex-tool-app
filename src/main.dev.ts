@@ -18,6 +18,7 @@ import { io } from 'socket.io-client';
 
 import MenuBuilder from './menu';
 import WefinexServices from './services/wefinex';
+import store from './services/store';
 
 const fetch = require('node-fetch');
 const sqlite3 = require('sqlite3');
@@ -100,6 +101,63 @@ const createWindow = async () => {
     } else {
       mainWindow.show();
       mainWindow.focus();
+
+      let socket = null;
+
+      // Trade
+      ipcMain.on('start-trade', async (event, options) => {
+        console.log('main start-trade', options);
+        try {
+          socket = io.connect('http://localhost:4567', {
+            reconnection: true,
+            reconnectionDelay: 2000,
+            reconnectionDelayMax: 60000,
+            reconnectionAttempts: 'Infinity',
+            timeout: 10000,
+            query: `tid=${options.tid}`,
+          });
+          socket.on(
+            'signal',
+            ({ amount, type }) => console.log('amount', amount, 'type', type)
+            // Nhận tín hiệu sau đó bet, check kết quả, lưu log
+          );
+          socket.on(
+            'result',
+            ({ result }) => console.log('result', result)
+            // Nhận tín hiệu sau đó bet, check kết quả, lưu log
+          );
+          socket.on('connect', () => {
+            event.reply('start-trade-reply', {
+              success: true,
+            });
+          });
+        } catch (error) {
+          console.error(error);
+          event.reply('start-trade-reply', {
+            success: false,
+            message: error.message,
+          });
+        }
+      });
+
+      ipcMain.on('stop-trade', async (event, options) => {
+        console.log('main stop-trade', options);
+        try {
+          if (socket) {
+            socket.close();
+            event.reply('stop-trade-reply', {
+              success: true,
+            });
+            socket = null;
+          }
+        } catch (error) {
+          console.error(error);
+          event.reply('stop-trade-reply', {
+            success: false,
+            message: error.message,
+          });
+        }
+      });
     }
   });
 
@@ -141,36 +199,13 @@ app.on('activate', () => {
   if (mainWindow === null) createWindow();
 });
 
-const renewWefinexAccessToken = async (refreshToken) => {
-  try {
-    const response = await fetch('https://wefinex.net/api/auth/auth/token', {
-      method: 'POST',
-      body: JSON.stringify({
-        client_id: 'Botrade',
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-      }),
-    });
-    if (response.status === 200) {
-      const data = await response.json();
-      return data;
-      // ipcMain.send('wefinex-renew-accesstoken-success', data);
-    } else {
-      throw new Error(response.statusText);
-    }
-  } catch (error) {
-    throw error;
-  }
-};
-
 ipcMain.on('login-wefinex', async (event, token) => {
-  console.log('main login wefinex token', token);
+  // console.log('main login wefinex token', token);
   try {
     const result = await WefinexServices.getProfile(token);
     event.reply('login-wefinex-reply', {
       success: true,
-      data: result.data,
-      token: result.token,
+      data: result,
     });
   } catch (error) {
     console.error(error);
@@ -181,27 +216,23 @@ ipcMain.on('login-wefinex', async (event, token) => {
   }
 });
 
-ipcMain.on('start-trade', async (event, options) => {
-  console.log('main start-trade', options);
+ipcMain.on('wefinex-get-balance', async (event) => {
   try {
-    const socket = io.connect('http://localhost:4567', {
-      reconnection: true,
-      reconnectionDelay: 2000,
-      reconnectionDelayMax: 60000,
-      reconnectionAttempts: 'Infinity',
-      timeout: 10000,
-      query: `tid=${options.tid}`,
+    const result = await WefinexServices.getBlance();
+    event.reply('wefinex-get-balance-reply', {
+      success: true,
+      data: result,
     });
-    socket.on(
-      'signal',
-      ({ amount, type }) => console.log('amount', amount, 'type', type)
-      // Nhận tín hiệu sau đó bet, check kết quả, lưu log
-    );
   } catch (error) {
-    // console.error(error);
-    // event.reply('login-wefinex-reply', {
-    //   success: false,
-    //   message: error.message,
-    // });
+    console.error(error);
+    event.reply('wefinex-get-balance-reply', {
+      success: false,
+      message: error.message,
+    });
   }
+});
+
+ipcMain.on('logout', async (event) => {
+  store.delete('access_token');
+  store.delete('refresh_token');
 });

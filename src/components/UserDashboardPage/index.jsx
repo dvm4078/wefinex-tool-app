@@ -19,6 +19,8 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import LoginWefinex from '../LoginWefinex';
 
+const { ipcRenderer } = require('electron');
+
 const { Option } = Select;
 
 function UserDashboardPage(props) {
@@ -68,6 +70,86 @@ function UserDashboardPage(props) {
   useEffect(() => {
     restoreSettings();
   }, []);
+
+  const handleStartTrade = () => {
+    const options = {
+      ...state,
+      tid: (user.group || {}).tid,
+    };
+    return new Promise((resolve) => {
+      ipcRenderer.once('start-trade-reply', (_, arg) => {
+        resolve(arg);
+      });
+      ipcRenderer.send('start-trade', options);
+    });
+  };
+
+  const startTrade = async () => {
+    try {
+      if (user.group && user.group.tid) {
+        const response = await handleStartTrade();
+
+        if (!response.success) {
+          notification.error({
+            message: 'Lỗi!',
+            description:
+              'Đã có lỗi xảy ra. Vui lòng liên hệ Admin để được trợ giúp!',
+          });
+        } else {
+          notification.success({
+            message: 'Thành công!',
+            description: 'Bắt đầu tự động trade',
+          });
+        }
+      } else {
+        notification.error({
+          message: 'Lỗi!',
+          description:
+            'Bạn chưa được chỉ định nhóm telegram để lấy tín hiệu. Vui lòng liên hệ Admin để được trợ giúp!',
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      notification.error({
+        message: 'Lỗi!',
+        description: error.message,
+      });
+    }
+  };
+
+  const handleStopTrade = () => {
+    return new Promise((resolve) => {
+      ipcRenderer.once('stop-trade-reply', (_, arg) => {
+        resolve(arg);
+      });
+      ipcRenderer.send('stop-trade', {});
+    });
+  };
+
+  const stopTrade = async () => {
+    try {
+      const response = await handleStopTrade();
+
+      if (!response.success) {
+        notification.error({
+          message: 'Lỗi!',
+          description:
+            'Đã có lỗi xảy ra. Vui lòng liên hệ Admin để được trợ giúp!',
+        });
+      } else {
+        notification.success({
+          message: 'Thành công!',
+          description: 'Đã dừng tự động trade',
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      notification.error({
+        message: 'Lỗi!',
+        description: error.message,
+      });
+    }
+  };
 
   return (
     <>
@@ -253,7 +335,12 @@ function UserDashboardPage(props) {
                   </Checkbox>
                 </Form.Item>
                 <Form.Item>
-                  <Button type="primary">Bắt đầu</Button>
+                  <Button type="primary" onClick={startTrade}>
+                    Bắt đầu
+                  </Button>
+                  <Button type="primary" danger onClick={stopTrade}>
+                    Dừng
+                  </Button>
                 </Form.Item>
               </Form>
             </div>

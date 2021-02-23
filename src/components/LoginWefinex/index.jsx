@@ -14,43 +14,50 @@ function LoginWefinex(props) {
 
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (token) => {
-    return new Promise((resolve) => {
-      ipcRenderer.once('login-wefinex-reply', (_, arg) => {
-        resolve(arg);
-      });
-      ipcRenderer.send('login-wefinex', token);
-    });
+  const handleLogin = async (token) => {
+    try {
+      const loginSync = () => {
+        return new Promise((resolve) => {
+          ipcRenderer.once('login-wefinex-reply', (_, arg) => {
+            resolve(arg);
+          });
+          ipcRenderer.send('login-wefinex', token);
+        });
+      };
+      const response = await loginSync();
+      // dispatch(loginWefinexSuccess(response.data));
+      if (!response.success) {
+        throw new Error(
+          `${response.message} Đã có lỗi xảy ra. Vui lòng thực hiện đúng các bước!`
+        );
+      }
+      return response;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   };
 
   const login = async (jsonToken) => {
     setLoading(true);
     try {
-      // const text = clipboard.readText();
       const token = JSON.parse(jsonToken);
       if (token.access_token && token.refresh_token) {
         const response = await handleLogin(token);
-        dispatch(loginWefinexSuccess(response.data.d));
-        localStorage.setItem(
-          'WEFINEX_ACCESS_TOKEN',
-          JSON.stringify(response.token)
-        );
-        if (!response.success) {
-          localStorage.removeItem('WEFINEX_ACCESS_TOKEN');
-          notification.error({
-            message: 'Lỗi!',
-            description: `${response.message} Đã có lỗi xảy ra. Vui lòng thực hiện đúng các bước!`,
-          });
-        }
+        dispatch(loginWefinexSuccess(response.data));
+        // if (!response.success) {
+        //   notification.error({
+        //     message: 'Lỗi!',
+        //     description: `${response.message} Đã có lỗi xảy ra. Vui lòng thực hiện đúng các bước!`,
+        //   });
+        // }
       } else {
-        localStorage.removeItem('WEFINEX_ACCESS_TOKEN');
         notification.error({
           message: 'Lỗi!',
           description: 'Đã có lỗi xảy ra. Vui lòng thực hiện đúng các bước!',
         });
       }
     } catch (error) {
-      localStorage.removeItem('WEFINEX_ACCESS_TOKEN');
       notification.error({
         message: 'Lỗi!',
         description: 'Đã có lỗi xảy ra. Vui lòng thực hiện đúng các bước!',
@@ -59,11 +66,15 @@ function LoginWefinex(props) {
     setLoading(false);
   };
 
+  const lg = async () => {
+    try {
+      const response = await handleLogin({});
+      dispatch(loginWefinexSuccess(response.data));
+    } catch (error) {}
+  };
+
   useEffect(() => {
-    const jsonToken = localStorage.getItem('WEFINEX_ACCESS_TOKEN');
-    if (jsonToken) {
-      login(jsonToken);
-    }
+    lg();
   }, []);
 
   return (

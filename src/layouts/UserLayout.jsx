@@ -15,6 +15,8 @@ import {
 import { logout, updatePassword } from '../actions/app';
 import Authendication from '../utils/authendication';
 
+const { ipcRenderer } = require('electron');
+
 const { Header, Sider, Content } = Layout;
 
 const layout = {
@@ -134,6 +136,7 @@ function UserLayout({ children }) {
   const handleLogout = () => {
     Authendication.logout();
     dispatch(logout());
+    ipcRenderer.send('logout');
   };
 
   return (
