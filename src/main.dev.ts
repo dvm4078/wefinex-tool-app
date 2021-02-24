@@ -21,11 +21,11 @@ import WefinexServices from './services/wefinex';
 import store from './services/store';
 
 const fetch = require('node-fetch');
-const sqlite3 = require('sqlite3');
+// const sqlite3 = require('sqlite3');
 
-const database = new sqlite3.Database('./db.sqlite3', (err) => {
-  if (err) console.error('Database opening error: ', err);
-});
+// const database = new sqlite3.Database('./db.sqlite3', (err) => {
+//   if (err) console.error('Database opening error: ', err);
+// });
 
 export default class AppUpdater {
   constructor() {
