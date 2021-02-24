@@ -15,6 +15,9 @@ class WefinexServices {
       });
       if (response.status === 200) {
         const data = await response.json();
+        if (!data.ok) {
+          throw new Error(data.m);
+        }
         store.set('access_token', data.d.access_token);
         store.set('refresh_token', data.d.refresh_token);
         return data.d;
@@ -44,6 +47,9 @@ class WefinexServices {
       });
       if (response.status === 200) {
         const data = await response.json();
+        if (!data.ok) {
+          throw new Error(data.m);
+        }
         store.set('access_token', token.access_token);
         store.set('refresh_token', token.refresh_token);
         return data.d;
@@ -70,6 +76,9 @@ class WefinexServices {
       );
       if (response.status === 200) {
         const data = await response.json();
+        if (!data.ok) {
+          throw new Error(data.m);
+        }
         return data.d;
       } else if (response.status === 401) {
         await this.renewAccessToken({
@@ -103,6 +112,9 @@ class WefinexServices {
       );
       if (response.status === 200) {
         const data = await response.json();
+        if (!data.ok) {
+          throw new Error(data.m);
+        }
         return data.d;
       } else if (response.status === 401) {
         await this.renewAccessToken({
