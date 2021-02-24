@@ -21,11 +21,49 @@ import WefinexServices from './services/wefinex';
 import store from './services/store';
 
 const fetch = require('node-fetch');
-const sqlite3 = require('sqlite3');
+// const sqlite3 = require('sqlite3');
 
-const database = new sqlite3.Database('./db.sqlite3', (err) => {
-  if (err) console.error('Database opening error: ', err);
-});
+// const dbPath = './db.sqlite3';
+
+// const db = new sqlite3.Database(dbPath);
+
+// db.serialize(function () {
+//   db.run(`
+//     CREATE TABLE IF NOT EXISTS "session" (
+//       "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+//       "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+//     );
+//     CREATE TABLE IF NOT EXISTS "round" (
+//       "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+//       "sessionId" INTEGER NOT NULL,
+//       "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+//     );
+//     CREATE TABLE IF NOT EXISTS "log" (
+//       "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+//       "roundId" INTEGER NOT NULL,
+//       "type" TEXT NOT NULL,
+//       "amount" INTEGER NOT NULL,
+//       "result" TEXT NOT NULL,
+//       "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP
+//     );
+//   `);
+
+//   db.run(
+//     `
+//     INSERT INTO session(id) VALUES (null);
+//     INSERT INTO round(sessionId) VALUES (1);
+//     INSERT INTO log(roundId, type, amount, result) VALUES (1, "up", 10, "win");
+//   `,
+//     null,
+//     (error) => {
+//       console.error('insert', error);
+//     }
+//   );
+// });
+
+const db = require('./database');
+
+db.sequelize.sync();
 
 export default class AppUpdater {
   constructor() {
