@@ -7,6 +7,9 @@ class WefinexServices {
     try {
       const response = await fetch('https://wefinex.net/api/auth/auth/token', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           client_id: 'Botrade',
           grant_type: 'refresh_token',
@@ -54,8 +57,9 @@ class WefinexServices {
         store.set('refresh_token', token.refresh_token);
         return data.d;
       } else if (response.status === 401) {
-        const newToken = await this.renewAccessToken(token);
-        this.getProfile(newToken);
+        await this.renewAccessToken(token);
+        // console.log('newToken', newToken);
+        this.getProfile({});
       }
     } catch (error) {
       throw error;
@@ -101,6 +105,7 @@ class WefinexServices {
         {
           method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             authorization: `Bearer ${access_token}`,
           },
           body: JSON.stringify({

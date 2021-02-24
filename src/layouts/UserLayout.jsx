@@ -7,8 +7,7 @@ import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
   DashboardOutlined,
-  LineChartOutlined,
-  SettingOutlined,
+  HistoryOutlined,
   DownOutlined,
 } from '@ant-design/icons';
 
@@ -152,12 +151,12 @@ function UserLayout({ children }) {
           <Menu.Item key="1" icon={<DashboardOutlined />}>
             <Link to="/user/dashboard">Tổng quan</Link>
           </Menu.Item>
-          <Menu.Item key="2" icon={<LineChartOutlined />}>
-            <Link to="/user/methods">Phương pháp</Link>
+          <Menu.Item key="2" icon={<HistoryOutlined />}>
+            <Link to="/user/bet-history">Lịch sử</Link>
           </Menu.Item>
-          <Menu.Item key="3" icon={<SettingOutlined />}>
+          {/* <Menu.Item key="3" icon={<SettingOutlined />}>
             <Link to="/admin/settings">Thiết lập</Link>
-          </Menu.Item>
+          </Menu.Item> */}
         </Menu>
       </Sider>
       <Layout className="site-layout">

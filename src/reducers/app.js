@@ -8,6 +8,7 @@ const initialState = {
   loggedInWefinex: false,
   wefinexInfo: null,
   balance: null,
+  initialBalance: null,
 };
 
 const appReducer = (state = initialState, action) => {
@@ -33,9 +34,17 @@ const appReducer = (state = initialState, action) => {
       };
     }
 
+    case TYPES.LOGIN_WEFINEX: {
+      return {
+        ...state,
+        loading: true,
+      };
+    }
+
     case TYPES.LOGIN_WEFINEX_SUCCESS: {
       return {
         ...state,
+        loading: false,
         wefinexInfo: action.wefinexInfo,
         loggedInWefinex: true,
       };
@@ -59,6 +68,7 @@ const appReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         balance: action.data,
+        initialBalance: state.initialBalance || action.data,
       };
 
     case TYPES.UPDATE_PASSWORD_SUCCESS:

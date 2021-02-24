@@ -1,56 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Button, Card, notification } from 'antd';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
-import { loginWefinexSuccess } from '../../actions/app';
+import { loginWefinex } from '../../actions/app';
 
-const { clipboard, ipcRenderer } = require('electron');
+const { clipboard } = require('electron');
 
 const scriptCopyWefinexToken = `var _0x3885=['value','4129266NEtfdu','102FLreYF','775456FMlDzG','getItem','execCommand','341926IDmgBo','body','95ZiKvPx','627282NApDNS','select','USER_TOKEN','3367KkxUWU','295361vfairn','17090aBLxpi','removeChild','appendChild','2yqgICz','4qOwIjC','2OdsLqF'];var _0x4235=function(_0x447544,_0x25344f){_0x447544=_0x447544-0x142;var _0x388514=_0x3885[_0x447544];return _0x388514;};var _0x394657=_0x4235;(function(_0x576c79,_0x347eb6){var _0x3146e0=_0x4235;while(!![]){try{var _0x41b05f=parseInt(_0x3146e0(0x145))*-parseInt(_0x3146e0(0x14f))+-parseInt(_0x3146e0(0x154))*parseInt(_0x3146e0(0x14c))+-parseInt(_0x3146e0(0x142))*parseInt(_0x3146e0(0x150))+-parseInt(_0x3146e0(0x155))*-parseInt(_0x3146e0(0x149))+parseInt(_0x3146e0(0x151))*-parseInt(_0x3146e0(0x14b))+-parseInt(_0x3146e0(0x146))+parseInt(_0x3146e0(0x144));if(_0x41b05f===_0x347eb6)break;else _0x576c79['push'](_0x576c79['shift']());}catch(_0x4e6b54){_0x576c79['push'](_0x576c79['shift']());}}}(_0x3885,0xddfbc));var dummy=document['createElement']('textarea');document[_0x394657(0x14a)][_0x394657(0x153)](dummy),dummy[_0x394657(0x143)]=localStorage[_0x394657(0x147)](_0x394657(0x14e)),dummy[_0x394657(0x14d)](),document[_0x394657(0x148)]('copy'),document[_0x394657(0x14a)][_0x394657(0x152)](dummy);`;
 
 function LoginWefinex(props) {
   const dispatch = useDispatch();
-
-  const [loading, setLoading] = useState(false);
-
-  const handleLogin = async (token) => {
-    try {
-      const loginSync = () => {
-        return new Promise((resolve) => {
-          ipcRenderer.once('login-wefinex-reply', (_, arg) => {
-            resolve(arg);
-          });
-          ipcRenderer.send('login-wefinex', token);
-        });
-      };
-      const response = await loginSync();
-      // dispatch(loginWefinexSuccess(response.data));
-      if (!response.success) {
-        throw new Error(
-          `${response.message} Đã có lỗi xảy ra. Vui lòng thực hiện đúng các bước!`
-        );
-      }
-      return response;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  };
+  const { loading } = useSelector((state) => state.app);
 
   const login = async (jsonToken) => {
-    setLoading(true);
     try {
       const token = JSON.parse(jsonToken);
       if (token.access_token && token.refresh_token) {
-        const response = await handleLogin(token);
-        dispatch(loginWefinexSuccess(response.data));
-        // if (!response.success) {
-        //   notification.error({
-        //     message: 'Lỗi!',
-        //     description: `${response.message} Đã có lỗi xảy ra. Vui lòng thực hiện đúng các bước!`,
-        //   });
-        // }
+        dispatch(loginWefinex(token));
       } else {
         notification.error({
           message: 'Lỗi!',
@@ -63,18 +30,10 @@ function LoginWefinex(props) {
         description: 'Đã có lỗi xảy ra. Vui lòng thực hiện đúng các bước!',
       });
     }
-    setLoading(false);
-  };
-
-  const lg = async () => {
-    try {
-      const response = await handleLogin({});
-      dispatch(loginWefinexSuccess(response.data));
-    } catch (error) {}
   };
 
   useEffect(() => {
-    lg();
+    dispatch(loginWefinex({}));
   }, []);
 
   return (

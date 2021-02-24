@@ -11,8 +11,7 @@ import NotFoundPage from './components/NotFoundPage';
 import AdminUsersPage from './components/AdminUsersPage';
 import AdminGroupsPage from './components/AdminGroupsPage';
 import UserDashboardPage from './components/UserDashboardPage';
-import UserSettingsPage from './components/UserSettingsPage';
-import UserMethodsPage from './components/UserMethodsPage';
+import UserHistoryPage from './components/UserHistoryPage';
 
 import AuthGuard from './components/AuthGuard';
 import GuestGuard from './components/GuestGuard';
@@ -90,13 +89,8 @@ const routes = [
       },
       {
         exact: true,
-        path: '/user/settings',
-        component: UserSettingsPage,
-      },
-      {
-        exact: true,
-        path: '/user/methods',
-        component: UserMethodsPage,
+        path: '/user/bet-history',
+        component: UserHistoryPage,
       },
       {
         component: () => <Redirect to="/404" />,

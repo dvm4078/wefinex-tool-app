@@ -16,6 +16,11 @@ export const loginSuccess = (token, user) => ({
   user,
 });
 
+export const loginWefinex = (token) => ({
+  type: TYPES.LOGIN_WEFINEX,
+  token,
+});
+
 export const loginWefinexSuccess = (wefinexInfo) => ({
   type: TYPES.LOGIN_WEFINEX_SUCCESS,
   wefinexInfo,
@@ -44,10 +49,10 @@ export const onError = () => ({
 });
 
 export const getBalance = () => ({
-  type: TYPES.GET_GROUPS,
+  type: TYPES.GET_BALANCE,
 });
 
 export const getBalanceSuccess = (data) => ({
-  type: TYPES.GET_GROUPS_SUCCESS,
+  type: TYPES.GET_BALANCE_SUCCESS,
   data,
 });
