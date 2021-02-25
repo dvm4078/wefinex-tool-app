@@ -68,7 +68,7 @@ db.logs = sequelize.define(
   }
 );
 
-db.logs.belongsTo(db.rounds, { foreignKey: 'roundId', as: 'Round' });
-db.rounds.belongsTo(db.sessions, { foreignKey: 'sessionId', as: 'Session' });
+db.logs.belongsTo(db.rounds, { foreignKey: 'roundId', as: 'Logs' });
+db.rounds.belongsTo(db.sessions, { foreignKey: 'sessionId', as: 'Rounds' });
 
 module.exports = db;
