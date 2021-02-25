@@ -14,11 +14,11 @@ db.sequelize = sequelize;
 db.sessions = sequelize.define(
   'session',
   {
-    id: {
-      type: Sequelize.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
+    // id: {
+    //   type: Sequelize.INTEGER,
+    //   autoIncrement: true,
+    //   primaryKey: true,
+    // },
   },
   {
     timestamps: true,
@@ -28,14 +28,15 @@ db.sessions = sequelize.define(
 db.rounds = sequelize.define(
   'round',
   {
-    id: {
-      type: Sequelize.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    sessionId: {
-      type: Sequelize.INTEGER,
-    },
+    // id: {
+    //   type: Sequelize.INTEGER,
+    //   autoIncrement: true,
+    //   primaryKey: true,
+    // },
+    // sessionId: {
+    //   type: Sequelize.INTEGER,
+    //   allowNull: false,
+    // },
   },
   {
     timestamps: true,
@@ -45,19 +46,17 @@ db.rounds = sequelize.define(
 db.logs = sequelize.define(
   'log',
   {
-    id: {
-      type: Sequelize.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    roundId: {
-      type: Sequelize.INTEGER,
-    },
     type: {
       type: Sequelize.STRING,
     },
     amount: {
       type: Sequelize.INTEGER,
+    },
+    money: {
+      type: Sequelize.INTEGER,
+    },
+    status: {
+      type: Sequelize.STRING,
     },
     result: {
       type: Sequelize.STRING,
@@ -68,7 +67,82 @@ db.logs = sequelize.define(
   }
 );
 
-db.logs.belongsTo(db.rounds, { foreignKey: 'roundId', as: 'Logs' });
-db.rounds.belongsTo(db.sessions, { foreignKey: 'sessionId', as: 'Rounds' });
+db.sessions.hasMany(db.rounds, { as: 'rounds' });
+db.rounds.hasMany(db.logs, { as: 'logs' });
+
+// db.logs.belongsTo(db.rounds, { foreignKey: 'roundId' });
+// db.rounds.belongsTo(db.sessions, { foreignKey: 'sessionId' });
+
+db.createSession = async () => {
+  try {
+    const result = await db.sessions.create();
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
+db.createRound = async (sessionId) => {
+  try {
+    const result = await db.rounds.create({ sessionId });
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
+db.createLog = async (roundId, type, amount, money, result, status) => {
+  try {
+    const response = await db.logs.create({
+      roundId,
+      type,
+      amount,
+      money,
+      result,
+      status,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+db.updateLog = async (logId, logData) => {
+  try {
+    const response = await db.logs.update(logData, {
+      where: {
+        id: logId,
+      },
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+db.readLogs = async (limit, page) => {
+  try {
+    const offset = (page - 1) * limit;
+    const results = await db.sessions.findAll({
+      include: {
+        model: db.rounds,
+        as: 'rounds',
+        include: {
+          model: db.logs,
+          as: 'logs',
+        },
+      },
+      // raw: true,
+      // nest: true,
+      limit,
+      offset,
+    });
+    const sessions = JSON.stringify(results, null, 2);
+    const ber = JSON.parse(sessions);
+    return ber;
+  } catch (error) {
+    throw error;
+  }
+};
 
 module.exports = db;

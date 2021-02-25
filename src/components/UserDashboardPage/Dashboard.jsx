@@ -35,7 +35,7 @@ function Dashboard(props) {
   const { loading, isTrading } = useSelector((state) => state.wefinex);
 
   const [state, setState] = useState({
-    method: '0',
+    methods: ['0'],
     takeProfit: false,
     takeProfitValue: 0,
     takeProfitType: '$',
@@ -118,9 +118,11 @@ function Dashboard(props) {
               style={{ marginBottom: '15px', flexDirection: 'row' }}
             >
               <Select
-                style={{ maxWidth: '250px', marginLeft: '10px' }}
-                value={state.method}
-                onChange={(value) => handleChangeOption('method', value)}
+                mode="multiple"
+                allowClear
+                style={{ marginLeft: '10px' }}
+                value={state.methods}
+                onChange={(value) => handleChangeOption('methods', value)}
                 disabled={isTrading}
               >
                 <Option value="0">Phương pháp tổng hợp</Option>

@@ -4,6 +4,7 @@ import appReducer from './app';
 import userReducer from './user';
 import groupReducer from './group';
 import wefinexReducer from './wefinex';
+import historyReducer from './history';
 
 export default function createReducer() {
   const rootReducer = combineReducers({
@@ -11,6 +12,7 @@ export default function createReducer() {
     user: userReducer,
     group: groupReducer,
     wefinex: wefinexReducer,
+    history: historyReducer,
   });
 
   return rootReducer;

@@ -1,79 +1,128 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Table, Badge, Menu, Dropdown, Space } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
+import { useDispatch, useSelector } from 'react-redux';
+import sum from 'lodash/sum';
+import flatten from 'lodash/flatten';
 
-const menu = (
-  <Menu>
-    <Menu.Item>Action 1</Menu.Item>
-    <Menu.Item>Action 2</Menu.Item>
-  </Menu>
-);
+import { getHistory } from '../../actions/history';
+
+const dateFormat = require('dateformat');
 
 const columns = [
-  { title: 'Phiên', dataIndex: 'session', key: 'session' },
+  { title: 'Phiên', dataIndex: 'id', key: 'id' },
   { title: 'Phương pháp', dataIndex: 'method', key: 'method' },
-  { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt' },
-  { title: 'Lãi / lỗ', dataIndex: 'result', key: 'result' },
-];
-
-const data = [
   {
-    session: '1',
-    method: 'Phương pháp 1',
-    createdAt: '15:12 24-02-2021',
-    result: '+0.95$',
+    title: 'Thời gian',
+    dataIndex: 'createdAt',
+    key: 'createdAt',
+    render: (createdAt = {}) => dateFormat(createdAt, 'h:MM:ss dd-mm-yyyy'),
+  },
+  {
+    title: 'Lãi / lỗ',
+    // dataIndex: 'result',
+    key: 'result',
+    render: (session) => {
+      const rounds = session.rounds || [];
+      const logs = flatten(rounds.map((round) => round.logs || []));
+      const moneys = (logs || []).map((log) => log.money || 0);
+      const result = sum(moneys);
+      return <b style={{ color: result < 0 ? 'red' : 'green' }}>{result}$</b>;
+    },
   },
 ];
-// for (let i = 0; i < 3; ++i) {
-//   data.push({
-//     key: i,
-//     name: 'Screem',
-//     platform: 'iOS',
-//     version: '10.3.4.5654',
-//     upgradeNum: 500,
-//     creator: 'Jack',
-//     createdAt: '2014-12-24 23:12:00',
-//   });
-// }
 
 function UserHistoryPage(props) {
-  const expandedRowRender = () => {
-    const columns = [
-      { title: 'Vòng', dataIndex: 'round', key: 'round' },
-      { title: 'Loại', dataIndex: 'type', key: 'type' },
-      { title: 'Số tiền', dataIndex: 'amout', key: 'amout' },
-      { title: 'Kết quả', dataIndex: 'result', key: 'result' },
-      { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt' },
-    ];
+  const dispatch = useDispatch();
+  const { loading, page, logs, total } = useSelector((state) => state.history);
 
-    const data = [
+  useEffect(() => {
+    dispatch(getHistory(5, 1));
+  }, []);
+
+  const renderLogTable = (_logs) => {
+    const tableColumns = [
+      { title: 'Loại', dataIndex: 'type', key: 'type' },
+      { title: 'Số tiền', dataIndex: 'amount', key: 'amount' },
+      // { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt' },
+      { title: 'Trạng thái', dataIndex: 'status', key: 'status' },
       {
-        round: '1',
-        type: 'Tăng',
-        amount: '1$',
-        result: '+0.95$',
-        createdAt: '15:14 24-02-2021',
+        title: 'Lãi / lỗ',
+        dataIndex: 'money',
+        key: 'money',
+        render: (money) => {
+          return <b style={{ color: money < 0 ? 'red' : 'green' }}>{money}$</b>;
+        },
       },
     ];
-    // for (let i = 0; i < 3; ++i) {
-    //   data.push({
-    //     key: i,
-    //     date: '2014-12-24 23:12:00',
-    //     name: 'This is production name',
-    //     upgradeNum: 'Upgraded: 56',
-    //   });
-    // }
-    return <Table columns={columns} dataSource={data} pagination={false} />;
+
+    return (
+      <Table
+        rowKey="id"
+        columns={tableColumns}
+        dataSource={_logs}
+        pagination={false}
+      />
+    );
+  };
+
+  const renderRoundTable = (rounds) => {
+    const tableColumns = [
+      { title: 'Vòng', dataIndex: 'id', key: 'id' },
+      {
+        title: 'Thời gian',
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+        render: (createdAt = {}) => dateFormat(createdAt, 'h:MM:ss dd-mm-yyyy'),
+      },
+      {
+        title: 'Lãi / lỗ',
+        render: (round) => {
+          const moneys = (round.logs || []).map((log) => log.money || 0);
+          const result = sum(moneys);
+          return (
+            <b style={{ color: result < 0 ? 'red' : 'green' }}>{result}$</b>
+          );
+        },
+      },
+    ];
+
+    return (
+      <Table
+        rowKey="id"
+        columns={tableColumns}
+        dataSource={rounds}
+        pagination={false}
+        expandable={{
+          expandedRowRender: (record) => renderLogTable(record.logs),
+          rowExpandable: (record) => !!record.logs.length,
+        }}
+      />
+    );
   };
 
   return (
     <>
       <Table
         // className="components-table-demo-nested"
+        rowKey="id"
+        loading={loading}
+        pagination={{
+          current: page,
+          pageSize: 5,
+          total,
+          onChange: (page) => {
+            dispatch(getHistory(5, page));
+          },
+        }}
         columns={columns}
-        expandable={{ expandedRowRender }}
-        dataSource={data}
+        // expandable={{ expandedRowRender }}
+        expandable={{
+          expandedRowRender: (record) => renderRoundTable(record.rounds),
+          rowExpandable: (record) => !!record.rounds.length,
+        }}
+        dataSource={logs}
       />
     </>
   );

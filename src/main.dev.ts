@@ -19,49 +19,11 @@ import { io } from 'socket.io-client';
 import MenuBuilder from './menu';
 import * as WefinexServices from './services/wefinex';
 import store from './services/store';
+import startTrading from './services/bet';
 
 import { BASE_URL } from './constants/global';
 
 const fetch = require('node-fetch');
-// const sqlite3 = require('sqlite3');
-
-// const dbPath = './db.sqlite3';
-
-// const db = new sqlite3.Database(dbPath);
-
-// db.serialize(function () {
-//   db.run(`
-//     CREATE TABLE IF NOT EXISTS "session" (
-//       "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-//       "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-//     );
-//     CREATE TABLE IF NOT EXISTS "round" (
-//       "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-//       "sessionId" INTEGER NOT NULL,
-//       "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-//     );
-//     CREATE TABLE IF NOT EXISTS "log" (
-//       "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-//       "roundId" INTEGER NOT NULL,
-//       "type" TEXT NOT NULL,
-//       "amount" INTEGER NOT NULL,
-//       "result" TEXT NOT NULL,
-//       "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP
-//     );
-//   `);
-
-//   db.run(
-//     `
-//     INSERT INTO session(id) VALUES (null);
-//     INSERT INTO round(sessionId) VALUES (1);
-//     INSERT INTO log(roundId, type, amount, result) VALUES (1, "up", 10, "win");
-//   `,
-//     null,
-//     (error) => {
-//       console.error('insert', error);
-//     }
-//   );
-// });
 
 const db = require('./database');
 
@@ -156,21 +118,22 @@ const createWindow = async () => {
             timeout: 10000,
             query: `tid=${options.tid}`,
           });
-          socket.on(
-            'signal',
-            ({ amount, type }) => console.log('amount', amount, 'type', type)
-            // Nhận tín hiệu sau đó bet, check kết quả, lưu log
-          );
-          socket.on(
-            'result',
-            ({ result }) => console.log('result', result)
-            // Nhận tín hiệu sau đó bet, check kết quả, lưu log
-          );
+          // socket.on(
+          //   'signal',
+          //   ({ amount, type }) => console.log('amount', amount, 'type', type)
+          //   // Nhận tín hiệu sau đó bet, check kết quả, lưu log
+          // );
+          // socket.on(
+          //   'result',
+          //   ({ result }) => console.log('result', result)
+          //   // Nhận tín hiệu sau đó bet, check kết quả, lưu log
+          // );
           socket.on('connect', () => {
             event.reply('start-trade-reply', {
               success: true,
             });
           });
+          startTrading(options, socket);
         } catch (error) {
           console.error(error);
           event.reply('start-trade-reply', {
@@ -266,6 +229,22 @@ ipcMain.on('wefinex-get-balance', async (event) => {
   } catch (error) {
     console.error(error);
     event.reply('wefinex-get-balance-reply', {
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+ipcMain.on('get-trading-log', async (event, params) => {
+  try {
+    const result = await db.readLogs(params.limit || 5, params.page || 1);
+    event.reply('get-trading-log-reply', {
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error(error);
+    event.reply('get-trading-log-reply', {
       success: false,
       message: error.message,
     });

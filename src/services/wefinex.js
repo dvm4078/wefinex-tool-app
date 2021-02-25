@@ -110,13 +110,17 @@ export const bet = async (type, amount) => {
         body: JSON.stringify({
           betType: type,
           betAmount: amount,
-          betAccountType: 'LIVE',
+          betAccountType:
+            process.env.NODE_ENV === 'development' ? 'DEMO' : 'LIVE',
         }),
       }
     );
+    console.log('type', type);
+    console.log('amount', amount);
     if (response.status === 200) {
       const data = await response.json();
       if (!data.ok) {
+        console.log('error data', data);
         throw new Error(data.m);
       }
       return data.d;
