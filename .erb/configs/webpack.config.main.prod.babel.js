@@ -35,20 +35,6 @@ export default merge(baseConfig, {
     filename: './src/main.prod.js',
   },
 
-  module: {
-    rules: [
-      {
-        test: /\.[jt]sx?$/,
-        exclude: /node_modules/,
-        use: [
-          {
-            loader: require.resolve('babel-loader'),
-          },
-        ],
-      },
-    ],
-  },
-
   optimization: {
     minimizer: [
       new TerserPlugin({
