@@ -1,11 +1,12 @@
 import axios from 'axios';
 import { create } from 'apisauce';
 
+import { BASE_URL } from '../constants/global';
+
 // const BASE_URL =
 //   process.env.NODE_ENV === 'production'
 //     ? 'https://api-dev.blogchiem.com/v1'
 //     : 'http://localhost:3000/v1';
-const BASE_URL = 'http://localhost:4567';
 
 const getInstance = (env) => {
   console.log('BASE_URL', BASE_URL);

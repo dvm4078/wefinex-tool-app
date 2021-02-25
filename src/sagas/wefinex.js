@@ -63,6 +63,13 @@ export function* startTrade(action) {
         description: 'Bắt đầu tự động trade',
       });
       yield put(startTradeSuccess(response.data));
+      setTimeout(() => {
+        notification.error({
+          message: 'Lỗi!',
+          description:
+            'Đã có lỗi xảy ra. Vui lòng liên hệ Admin để được trợ giúp!',
+        });
+      }, 5000);
     } else {
       yield put(onError());
       notification.error({

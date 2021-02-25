@@ -154,7 +154,7 @@ export function* loginWefinex(action) {
     const response = yield loginWefinexSync();
     if (response.success) {
       const user = yield select((state) => state.app.user);
-      if (response.data.nn !== (user || {}).username) {
+      if (response.data.nn !== (user || {}).wAccount) {
         notification.error({
           message: 'Lỗi!',
           description: 'Tài khoản wefinex không hợp lệ.',

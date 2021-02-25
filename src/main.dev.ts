@@ -17,8 +17,10 @@ import log from 'electron-log';
 import { io } from 'socket.io-client';
 
 import MenuBuilder from './menu';
-import WefinexServices from './services/wefinex';
+import * as WefinexServices from './services/wefinex';
 import store from './services/store';
+
+import { BASE_URL } from './constants/global';
 
 const fetch = require('node-fetch');
 // const sqlite3 = require('sqlite3');
@@ -146,7 +148,7 @@ const createWindow = async () => {
       ipcMain.on('start-trade', async (event, options) => {
         console.log('main start-trade', options);
         try {
-          socket = io.connect('http://localhost:4567', {
+          socket = io.connect(BASE_URL, {
             reconnection: true,
             reconnectionDelay: 2000,
             reconnectionDelayMax: 60000,
@@ -256,7 +258,7 @@ ipcMain.on('login-wefinex', async (event, token) => {
 
 ipcMain.on('wefinex-get-balance', async (event) => {
   try {
-    const result = await WefinexServices.getBlance();
+    const result = await WefinexServices.getBalance();
     event.reply('wefinex-get-balance-reply', {
       success: true,
       data: result,
