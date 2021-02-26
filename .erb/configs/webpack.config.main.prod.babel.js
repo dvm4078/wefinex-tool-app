@@ -37,9 +37,9 @@ export default merge(baseConfig, {
 
   optimization: {
     minimizer: [
-      new TerserPlugin({
-        parallel: true,
-      }),
+      // new TerserPlugin({
+      //   parallel: true,
+      // }),
     ],
   },
 

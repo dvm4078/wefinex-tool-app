@@ -9,10 +9,11 @@ import method7Settings from './settings/method7';
 import { bet as requestBet } from '../wefinex';
 import db from '../../database';
 
-const handleTrading = async (options, socket, methodSettings) => {
+const handleTrading = async (options, socket, methodSettings, methodName) => {
   try {
     const {
       methods,
+      betValue,
       takeProfit,
       takeProfitValue,
       takeProfitType,
@@ -26,17 +27,24 @@ const handleTrading = async (options, socket, methodSettings) => {
       startWhenTakeProfit,
       startWhenStopLoss,
       saveHistory,
+      initialBalance,
     } = options;
 
-    const session = await db.createSession();
+    let session = null;
     let round = null;
     let log = null;
+
+    if (saveHistory) {
+      session = await db.createSession(methodName);
+    }
 
     let consecutiveWins = 0;
 
     let times = 1;
     let timesWin = 0;
     let timesLose = 0;
+    let winAmount = 0;
+    let loseAmount = 0;
 
     let waitingResult = false;
 
@@ -48,19 +56,22 @@ const handleTrading = async (options, socket, methodSettings) => {
       timesLose = 0;
       waitingResult = false;
       consecutiveWins = 0;
+      winAmount = 0;
+      loseAmount = 0;
     };
 
     const handleBet = async (type, amount) => {
       try {
-        if (!round) {
+        if (saveHistory && !round && session) {
           round = await db.createRound(session.id);
         }
         const settingOnTime = methodSettings[times];
+        const realAmount = amount * (betValue || 1);
         if (settingOnTime.signalAmount == amount) {
-          const result = await requestBet(type, amount);
+          const result = await requestBet(type, realAmount);
           waitingResult = true;
-          if (saveHistory) {
-            const money = 0 - parseInt(amount || '0');
+          if (saveHistory && round) {
+            const money = 0 - parseInt(realAmount || '0');
             log = await db.createLog(
               round.id,
               type,
@@ -82,14 +93,50 @@ const handleTrading = async (options, socket, methodSettings) => {
         const settingOnTime = methodSettings[times];
         if (waitingResult) {
           let money = log.money;
-          if (result == 'WIN') {
+          if (result === 'WIN') {
             consecutiveWins += 1;
+            timesWin += 1;
+            if (
+              startWhenTakeProfitTimes &&
+              startWhenTakeProfitTimesValue &&
+              startWhenTakeProfitTimesValue == timesWin
+            ) {
+              reset();
+            }
             times = settingOnTime.winAction;
             money = (log.amount * 95) / 100;
+            winAmount += money;
+            if (takeProfit && takeProfitValue) {
+              let winValue = winAmount;
+              if (takeProfitType == '%') {
+                winValue = (winValue / initialBalance) * 100;
+                if (winValue === takeProfitValue) {
+                  socket.close();
+                }
+              }
+            }
             if (consecutiveWins === 2) {
               reset();
             }
-          } else if (result == 'LOSE') {
+          } else if (result === 'LOSE') {
+            timesLose += 1;
+            loseAmount -= money;
+            if (stopLoss && stopLossValue) {
+              let lossValue = loseAmount;
+              if (stopLossType == '%') {
+                lossValue = (lossValue / initialBalance) * 100;
+                if (lossValue === stopLossValue) {
+                  socket.close();
+                }
+              }
+            }
+            if (
+              startWhenStopLossTimes &&
+              startWhenStopLossTimesValue &&
+              startWhenStopLossTimesValue == timesLose
+            ) {
+              reset();
+            }
             consecutiveWins = 0;
             times = settingOnTime.loseAction;
           }
@@ -122,35 +169,43 @@ const startTrading = async (options, socket) => {
       switch (method) {
         case '0': {
           const methodSettings = method1Settings;
-          return handleTrading(options, socket, methodSettings);
+          const methodName = 'Phương pháp tổng hợp';
+          return handleTrading(options, socket, methodSettings, methodName);
         }
         case '1': {
           const methodSettings = method1Settings;
-          return handleTrading(options, socket, methodSettings);
+          const methodName = 'Phương pháp 1';
+          return handleTrading(options, socket, methodSettings, methodName);
         }
         case '2': {
           const methodSettings = method2Settings;
-          return handleTrading(options, socket, methodSettings);
+          const methodName = 'Phương pháp 2';
+          return handleTrading(options, socket, methodSettings, methodName);
         }
         case '3': {
           const methodSettings = method3Settings;
-          return handleTrading(options, socket, methodSettings);
+          const methodName = 'Phương pháp 3';
+          return handleTrading(options, socket, methodSettings, methodName);
         }
         case '4': {
           const methodSettings = method4Settings;
-          return handleTrading(options, socket, methodSettings);
+          const methodName = 'Phương pháp 4';
+          return handleTrading(options, socket, methodSettings, methodName);
         }
         case '5': {
           const methodSettings = method5Settings;
-          return handleTrading(options, socket, methodSettings);
+          const methodName = 'Phương pháp 5';
+          return handleTrading(options, socket, methodSettings, methodName);
         }
         case '6': {
           const methodSettings = method6Settings;
-          return handleTrading(options, socket, methodSettings);
+          const methodName = 'Phương pháp 6';
+          return handleTrading(options, socket, methodSettings, methodName);
         }
         case '7': {
           const methodSettings = method7Settings;
-          return handleTrading(options, socket, methodSettings);
+          const methodName = 'Phương pháp 7';
+          return handleTrading(options, socket, methodSettings, methodName);
         }
         default:
           return null;

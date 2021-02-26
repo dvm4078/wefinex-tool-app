@@ -5,6 +5,7 @@ import { DownOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import sum from 'lodash/sum';
 import flatten from 'lodash/flatten';
+import numeral from 'numeral';
 
 import { getHistory } from '../../actions/history';
 
@@ -12,7 +13,7 @@ const dateFormat = require('dateformat');
 
 const columns = [
   { title: 'Phiên', dataIndex: 'id', key: 'id' },
-  { title: 'Phương pháp', dataIndex: 'method', key: 'method' },
+  { title: 'Phương pháp', dataIndex: 'methodName', key: 'methodName' },
   {
     title: 'Thời gian',
     dataIndex: 'createdAt',
@@ -28,7 +29,11 @@ const columns = [
       const logs = flatten(rounds.map((round) => round.logs || []));
       const moneys = (logs || []).map((log) => log.money || 0);
       const result = sum(moneys);
-      return <b style={{ color: result < 0 ? 'red' : 'green' }}>{result}$</b>;
+      return (
+        <b style={{ color: result < 0 ? 'red' : 'green' }}>
+          {numeral(result).format('0.00$')}
+        </b>
+      );
     },
   },
 ];
@@ -52,7 +57,11 @@ function UserHistoryPage(props) {
         dataIndex: 'money',
         key: 'money',
         render: (money) => {
-          return <b style={{ color: money < 0 ? 'red' : 'green' }}>{money}$</b>;
+          return (
+            <b style={{ color: money < 0 ? 'red' : 'green' }}>
+              {numeral(money).format('0.00$')}
+            </b>
+          );
         },
       },
     ];
@@ -82,7 +91,9 @@ function UserHistoryPage(props) {
           const moneys = (round.logs || []).map((log) => log.money || 0);
           const result = sum(moneys);
           return (
-            <b style={{ color: result < 0 ? 'red' : 'green' }}>{result}$</b>
+            <b style={{ color: result < 0 ? 'red' : 'green' }}>
+              {numeral(result).format('0.00$')}
+            </b>
           );
         },
       },

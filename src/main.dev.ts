@@ -12,7 +12,6 @@ import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { io } from 'socket.io-client';
 
@@ -23,7 +22,7 @@ import startTrading from './services/bet';
 
 import { BASE_URL } from './constants/global';
 
-const fetch = require('node-fetch');
+// const fetch = require('node-fetch');
 
 const db = require('./database');
 
@@ -32,8 +31,8 @@ db.sequelize.sync();
 export default class AppUpdater {
   constructor() {
     log.transports.file.level = 'info';
-    autoUpdater.logger = log;
-    autoUpdater.checkForUpdatesAndNotify();
+    // autoUpdater.logger = log;
+    // autoUpdater.checkForUpdatesAndNotify();
   }
 }
 

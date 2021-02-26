@@ -14,6 +14,9 @@ db.sequelize = sequelize;
 db.sessions = sequelize.define(
   'session',
   {
+    methodName: {
+      type: Sequelize.STRING,
+    },
     // id: {
     //   type: Sequelize.INTEGER,
     //   autoIncrement: true,
@@ -73,9 +76,9 @@ db.rounds.hasMany(db.logs, { as: 'logs' });
 // db.logs.belongsTo(db.rounds, { foreignKey: 'roundId' });
 // db.rounds.belongsTo(db.sessions, { foreignKey: 'sessionId' });
 
-db.createSession = async () => {
+db.createSession = async (methodName) => {
   try {
-    const result = await db.sessions.create();
+    const result = await db.sessions.create({ methodName });
     return result;
   } catch (error) {
     throw error;

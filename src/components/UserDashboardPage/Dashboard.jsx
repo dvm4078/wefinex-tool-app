@@ -38,6 +38,7 @@ function Dashboard(props) {
     methods: ['0'],
     takeProfit: false,
     takeProfitValue: 0,
+    betValue: 1,
     takeProfitType: '$',
     stopLoss: false,
     stopLossValue: 0,
@@ -68,9 +69,29 @@ function Dashboard(props) {
     try {
       const settings = JSON.parse(localStorage.getItem('SETTINGS'));
       if (settings) {
-        setState(settings);
+        setState({
+          methods: settings.methods || ['0'],
+          takeProfit: settings.takeProfit || false,
+          takeProfitValue: settings.takeProfitValue || 0,
+          betValue: settings.betValue || 1,
+          takeProfitType: settings.takeProfitType || '$',
+          stopLoss: settings.stopLoss || false,
+          stopLossValue: settings.stopLossValue || 0,
+          stopLossType: settings.stopLossType || '$',
+          startWhenTakeProfitTimes: settings.startWhenTakeProfitTimes || false,
+          startWhenTakeProfitTimesValue:
+            settings.startWhenTakeProfitTimesValue || 0,
+          startWhenStopLossTimes: settings.startWhenStopLossTimes || false,
+          startWhenStopLossTimesValue:
+            settings.startWhenStopLossTimesValue || 0,
+          startWhenTakeProfit: settings.startWhenTakeProfit || false,
+          startWhenStopLoss: settings.startWhenStopLoss || false,
+          saveHistory: settings.saveHistory || false,
+        });
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {
@@ -83,6 +104,7 @@ function Dashboard(props) {
       const options = {
         ...state,
         tid: (user.group || {}).tid,
+        initialBalance: (initialBalance || {}).availableBalance,
       };
       dispatch(startTradeAction(options));
     } else {
@@ -134,6 +156,18 @@ function Dashboard(props) {
                 <Option value="6">Phương pháp 6</Option>
                 <Option value="7">Phương pháp 7</Option>
               </Select>
+            </Form.Item>
+            <Form.Item
+              label="Giá trị vào lệnh"
+              style={{ marginBottom: '15px', flexDirection: 'row' }}
+            >
+              <InputNumber
+                style={{ marginLeft: '10px' }}
+                min={1}
+                disabled={isTrading}
+                value={state.betValue}
+                onChange={(value) => handleChangeOption('betValue', value)}
+              />
             </Form.Item>
             <div
               style={{
