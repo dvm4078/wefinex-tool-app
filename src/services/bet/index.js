@@ -39,6 +39,14 @@ const handleTrading = async (
       username,
     } = options;
 
+    let isAllowBet = true;
+    if (
+      (startWhenTakeProfitTimes && startWhenTakeProfitTimesValue) ||
+      (startWhenStopLossTimes && startWhenStopLossTimesValue)
+    ) {
+      isAllowBet = false;
+    }
+
     let session = null;
     let round = null;
     let log = null;
@@ -53,7 +61,7 @@ const handleTrading = async (
     let timesWin = 0;
     let timesLose = 0;
     let winAmount = 0;
-    let loseAmount = 0;
+    // let loseAmount = 0;
 
     let waitingResult = false;
 
@@ -65,25 +73,37 @@ const handleTrading = async (
       timesLose = 0;
       // waitingResult = false;
       consecutiveWins = 0;
-      winAmount = 0;
-      loseAmount = 0;
+      // winAmount = 0;
+      // loseAmount = 0;
     };
 
     const handleBet = async (type, amount) => {
       try {
+        if (!isAllowBet) {
+          return;
+        }
         if (saveHistory && !round && session) {
           round = await db.createRound(session.id);
         }
         const settingOnTime = methodSettings[times];
         const realAmount = amount * settingOnTime.amount * (betValue || 1);
         if (settingOnTime.signalAmount == amount) {
-          const result = await requestBet(type, realAmount, betAccountType);
+          let betType = type;
+          if (methodSettings.isInverse) {
+            if (type === 'UP') {
+              betType = 'DOWN';
+            } else {
+              betType = 'UP';
+            }
+          }
+
+          const result = await requestBet(betType, realAmount, betAccountType);
           waitingResult = true;
           if (saveHistory && round) {
             const money = 0 - parseInt(realAmount || '0');
             log = await db.createLog(
               round.id,
-              type,
+              betType,
               realAmount,
               money,
               null,
@@ -98,68 +118,111 @@ const handleTrading = async (
         throw error;
       }
     };
-
+    let lanThang = 0;
+    let lanThua = 0;
     const handleResult = async (result) => {
       try {
+        if (!isAllowBet) {
+          if (result === 'WIN') {
+            lanThang += 1;
+          } else {
+            lanThua += 1;
+          }
+          if (
+            startWhenTakeProfitTimes &&
+            startWhenTakeProfitTimesValue &&
+            startWhenTakeProfitTimesValue == lanThang
+          ) {
+            lanThang = 0;
+            isAllowBet = true;
+          }
+          if (
+            startWhenStopLossTimes &&
+            startWhenStopLossTimesValue &&
+            startWhenStopLossTimesValue == lanThua
+          ) {
+            lanThua = 0;
+            isAllowBet = true;
+          }
+        }
+
         const settingOnTime = methodSettings[times];
         if (waitingResult && log) {
           let money = log.money;
           if (result === 'WIN') {
-            consecutiveWins += 1;
             timesWin += 1;
-            times = settingOnTime.winAction;
             money = (log.amount * 95) / 100;
             winAmount += money;
+
+            if (saveHistory && log) {
+              await db.updateLog(log.id, { status: 'success', result, money });
+              log = null;
+            }
+
+            /* Xủ lý chốt lãi */
             if (takeProfit && takeProfitValue) {
               let winValue = winAmount;
               if (takeProfitType == '%') {
                 winValue = (winValue / initialBalance) * 100;
-                if (winValue === takeProfitValue) {
-                  socket.close();
+              }
+              if (winValue >= takeProfitValue) {
+                if (startWhenTakeProfit) {
+                  if (saveHistory) {
+                    winAmount = 0;
+                    session = await db.createSession(methodName, username);
+                  }
+                  reset();
+                } else {
+                  stopTrade();
                 }
+                // socket.close();
               }
             }
-            if (
-              startWhenTakeProfitTimes &&
-              startWhenTakeProfitTimesValue &&
-              startWhenTakeProfitTimesValue == timesWin
-            ) {
-              reset();
-            }
-            if (consecutiveWins === 2) {
-              reset();
-            }
-            if (times === 1) {
-              reset();
-            }
+            /* Kết thúc xủ lý chốt lãi */
+
+            consecutiveWins += 1;
+            times = settingOnTime.winAction;
           } else if (result === 'LOSE') {
             timesLose += 1;
-            loseAmount -= money;
+            winAmount -= money;
+
+            if (saveHistory && log) {
+              await db.updateLog(log.id, { status: 'success', result, money });
+              log = null;
+            }
+
+            /* Xử lý chốt lỗ */
             if (stopLoss && stopLossValue) {
-              let lossValue = loseAmount;
-              if (stopLossType == '%') {
-                lossValue = (lossValue / initialBalance) * 100;
-                if (lossValue === stopLossValue) {
-                  socket.close();
+              let lossValue = winAmount;
+              if (lossValue < 0) {
+                lossValue = Math.abs(lossValue);
+                if (stopLossType == '%') {
+                  lossValue = (lossValue / initialBalance) * 100;
+                }
+                if (lossValue >= stopLossValue) {
+                  if (startWhenStopLoss) {
+                    if (saveHistory) {
+                      winAmount = 0;
+                      session = await db.createSession(methodName, username);
+                    }
+                    reset();
+                  } else {
+                    stopTrade();
+                  }
                 }
               }
             }
-            if (
-              startWhenStopLossTimes &&
-              startWhenStopLossTimesValue &&
-              startWhenStopLossTimesValue == timesLose
-            ) {
-              reset();
-            }
+            /* Kết thúc xử lý chốt lỗ */
+
             consecutiveWins = 0;
             times = settingOnTime.loseAction;
-            if (times === 1) {
-              reset();
-            }
           }
-          if (saveHistory && log) {
-            await db.updateLog(log.id, { status: 'success', result, money });
-            log = null;
+
+          if (consecutiveWins === 2) {
+            reset();
+          }
+          if (times === 1) {
+            reset();
           }
           mainWindow.webContents.send('end-bet', '');
           waitingResult = false;

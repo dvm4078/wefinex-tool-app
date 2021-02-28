@@ -116,10 +116,14 @@ function Dashboard(props) {
       const options = {
         ...state,
         tid: (user.group || {}).tid,
-        initialBalance: (initialBalance || {}).availableBalance,
+        initialBalance:
+          state.betAccountType === 'LIVE'
+            ? (initialBalance || {}).availableBalance
+            : (initialBalance || {}).demoBalance,
         username: wefinexInfo.nn,
       };
       dispatch(startTradeAction(options));
+      dispatch(getBalance());
     } else {
       notification.error({
         message: 'Lỗi!',
@@ -148,10 +152,23 @@ function Dashboard(props) {
           // style={{ width: 300 }}
         >
           <Form layout="vertical">
-            <Form.Item
-              label="Tài khoản"
-              style={{ marginBottom: '15px', flexDirection: 'row' }}
+            <div
+              style={{
+                marginBottom: '10px',
+                display: 'flex',
+                height: '32px',
+              }}
             >
+              <p
+                style={{
+                  width: '110px',
+                  color: isTrading
+                    ? 'rgba(0, 0, 0, 0.25)'
+                    : 'rgba(0, 0, 0, 0.85)',
+                }}
+              >
+                Tài khoản:{' '}
+              </p>
               <Select
                 style={{ marginLeft: '10px', maxWidth: '100px' }}
                 value={state.betAccountType}
@@ -163,15 +180,28 @@ function Dashboard(props) {
                 <Option value="LIVE">Thực</Option>
                 <Option value="DEMO">Demo</Option>
               </Select>
-            </Form.Item>
-            <Form.Item
-              label="Phương pháp"
-              style={{ marginBottom: '15px', flexDirection: 'row' }}
+            </div>
+            <div
+              style={{
+                marginBottom: '10px',
+                display: 'flex',
+                height: '32px',
+              }}
             >
+              <p
+                style={{
+                  width: '110px',
+                  color: isTrading
+                    ? 'rgba(0, 0, 0, 0.25)'
+                    : 'rgba(0, 0, 0, 0.85)',
+                }}
+              >
+                Phương pháp:{' '}
+              </p>
               <Select
                 mode="multiple"
                 allowClear
-                style={{ marginLeft: '10px' }}
+                style={{ marginLeft: '10px', flex: 1 }}
                 value={state.methods}
                 onChange={(value) => handleChangeOption('methods', value)}
                 disabled={isTrading}
@@ -185,22 +215,35 @@ function Dashboard(props) {
                 <Option value="6">Phương pháp 6</Option>
                 <Option value="7">Phương pháp 7</Option>
               </Select>
-            </Form.Item>
-            <Form.Item
-              label="Giá trị vào lệnh"
-              style={{ marginBottom: '15px', flexDirection: 'row' }}
+            </div>
+            <div
+              style={{
+                marginBottom: '10px',
+                display: 'flex',
+                height: '32px',
+              }}
             >
+              <p
+                style={{
+                  width: '110px',
+                  color: isTrading
+                    ? 'rgba(0, 0, 0, 0.25)'
+                    : 'rgba(0, 0, 0, 0.85)',
+                }}
+              >
+                Giá trị vào lệnh:{' '}
+              </p>
               <InputNumber
-                style={{ marginLeft: '10px' }}
+                style={{ marginLeft: '10px', height: '32px' }}
                 min={1}
                 disabled={isTrading}
                 value={state.betValue}
                 onChange={(value) => handleChangeOption('betValue', value)}
               />
-            </Form.Item>
+            </div>
             <div
               style={{
-                marginBottom: '15px',
+                marginBottom: '10px',
                 color: isTrading
                   ? 'rgba(0, 0, 0, 0.25)'
                   : 'rgba(0, 0, 0, 0.85)',
@@ -212,6 +255,7 @@ function Dashboard(props) {
                 onChange={(event) =>
                   handleChangeOption('takeProfit', event.target.checked)
                 }
+                style={{ width: '85px' }}
               >
                 Chốt lỗ
               </Checkbox>
@@ -221,11 +265,12 @@ function Dashboard(props) {
                 onChange={(value) =>
                   handleChangeOption('takeProfitValue', value)
                 }
+                style={{ marginRight: '5px' }}
               />{' '}
               kiểu
               <Radio.Group
                 disabled={isTrading}
-                style={{ marginLeft: '7px' }}
+                style={{ marginLeft: '10px' }}
                 value={state.takeProfitType}
                 onChange={(event) =>
                   handleChangeOption('takeProfitType', event.target.value)
@@ -237,7 +282,7 @@ function Dashboard(props) {
             </div>
             <div
               style={{
-                marginBottom: '15px',
+                marginBottom: '10px',
                 color: isTrading
                   ? 'rgba(0, 0, 0, 0.25)'
                   : 'rgba(0, 0, 0, 0.85)',
@@ -249,6 +294,7 @@ function Dashboard(props) {
                 onChange={(event) =>
                   handleChangeOption('stopLoss', event.target.checked)
                 }
+                style={{ width: '85px' }}
               >
                 Chốt lãi
               </Checkbox>
@@ -256,11 +302,12 @@ function Dashboard(props) {
                 disabled={isTrading}
                 value={state.stopLossValue}
                 onChange={(value) => handleChangeOption('stopLossValue', value)}
+                style={{ marginRight: '5px' }}
               />{' '}
               kiểu
               <Radio.Group
                 disabled={isTrading}
-                style={{ marginLeft: '7px' }}
+                style={{ marginLeft: '10px' }}
                 value={state.stopLossType}
                 onChange={(event) =>
                   handleChangeOption('stopLossType', event.target.value)
@@ -272,7 +319,7 @@ function Dashboard(props) {
             </div>
             <div
               style={{
-                marginBottom: '15px',
+                marginBottom: '10px',
                 color: isTrading
                   ? 'rgba(0, 0, 0, 0.25)'
                   : 'rgba(0, 0, 0, 0.85)',
@@ -287,6 +334,7 @@ function Dashboard(props) {
                     event.target.checked
                   )
                 }
+                style={{ width: '240px' }}
               >
                 Bắt đầu lượt trade mới khi thắng
               </Checkbox>
@@ -317,6 +365,7 @@ function Dashboard(props) {
                     event.target.checked
                   )
                 }
+                style={{ width: '240px' }}
               >
                 Bắt đầu lượt trade mới khi thua
               </Checkbox>
@@ -330,10 +379,12 @@ function Dashboard(props) {
               />{' '}
               lần
             </div>
-            <Form.Item
-              style={{ marginBottom: '15px' }}
-              name="startTradeWhenTakeProfit"
-              valuePropName="checked"
+
+            <div
+              style={{
+                marginBottom: '10px',
+                height: '32px',
+              }}
             >
               <Checkbox
                 disabled={isTrading}
@@ -347,11 +398,12 @@ function Dashboard(props) {
               >
                 Bắt đầu lượt trade mới khi đạt chốt lãi
               </Checkbox>
-            </Form.Item>
-            <Form.Item
-              style={{ marginBottom: '15px' }}
-              name="startTradeWhenStopLoss"
-              valuePropName="checked"
+            </div>
+            <div
+              style={{
+                marginBottom: '10px',
+                height: '32px',
+              }}
             >
               <Checkbox
                 disabled={isTrading}
@@ -362,14 +414,16 @@ function Dashboard(props) {
               >
                 Bắt đầu lượt trade mới khi đạt chốt lỗ
               </Checkbox>
-            </Form.Item>
-            <Form.Item
-              style={{ marginBottom: '15px' }}
-              name="wrireLog"
-              valuePropName="checked"
+            </div>
+            <div
+              style={{
+                marginBottom: '10px',
+                height: '32px',
+              }}
             >
               <Checkbox
                 disabled={isTrading}
+                defaultChecked={state.saveHistory}
                 checked={state.saveHistory}
                 onChange={(event) =>
                   handleChangeOption('saveHistory', event.target.checked)
@@ -377,29 +431,27 @@ function Dashboard(props) {
               >
                 Lưu lại lịch sử đánh
               </Checkbox>
-            </Form.Item>
-            <Form.Item>
-              {isTrading ? (
-                <Button
-                  type="primary"
-                  loading={loading}
-                  danger
-                  block
-                  onClick={stopTrade}
-                >
-                  Dừng
-                </Button>
-              ) : (
-                <Button
-                  type="primary"
-                  loading={loading}
-                  block
-                  onClick={startTrade}
-                >
-                  Bắt đầu
-                </Button>
-              )}
-            </Form.Item>
+            </div>
+            {isTrading ? (
+              <Button
+                type="primary"
+                loading={loading}
+                danger
+                block
+                onClick={stopTrade}
+              >
+                Dừng
+              </Button>
+            ) : (
+              <Button
+                type="primary"
+                loading={loading}
+                block
+                onClick={startTrade}
+              >
+                Bắt đầu
+              </Button>
+            )}
           </Form>
         </Card>
       </div>
@@ -426,6 +478,21 @@ function Dashboard(props) {
             {numeral(
               ((balance || {}).availableBalance || 0) -
                 ((initialBalance || {}).availableBalance || 0)
+            ).format('0.00$')}
+          </p>
+          <p>
+            <b>Số dư ban đầu (DEMO): </b>
+            {numeral((initialBalance || {}).demoBalance).format('0.00$')}
+          </p>
+          <p>
+            <b>Số dư hiện tại (DEMO): </b>
+            {numeral((balance || {}).demoBalance).format('0.00$')}
+          </p>
+          <p>
+            <b>Lãi / lỗ (DEMO): </b>
+            {numeral(
+              ((balance || {}).demoBalance || 0) -
+                ((initialBalance || {}).demoBalance || 0)
             ).format('0.00$')}
           </p>
           <p>

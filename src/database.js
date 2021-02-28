@@ -126,6 +126,19 @@ db.updateLog = async (logId, logData) => {
   }
 };
 
+db.countSessions = async (username) => {
+  try {
+    const count = await db.sessions.count({
+      where: {
+        username,
+      },
+    });
+    return count;
+  } catch (error) {
+    throw error;
+  }
+};
+
 db.readLogs = async (username, limit, page) => {
   try {
     const offset = (page - 1) * limit;

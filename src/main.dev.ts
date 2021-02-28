@@ -37,6 +37,7 @@ export default class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
+let listened = false;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -112,59 +113,61 @@ const createWindow = async () => {
         }
       };
 
-      // Trade
-      ipcMain.on('start-trade', async (event, options) => {
-        console.log('main start-trade', options);
-        try {
-          if (socket) {
-            stopTrade();
-          }
-          socket = io.connect(BASE_URL, {
-            reconnection: true,
-            reconnectionDelay: 2000,
-            reconnectionDelayMax: 60000,
-            reconnectionAttempts: 'Infinity',
-            timeout: 10000,
-            query: `tid=${options.tid}`,
-          });
-          socket.on('connect', () => {
+      if (!listened) {
+        listened = true;
+        ipcMain.on('start-trade', async (event, options) => {
+          console.log('main start-trade', options);
+          try {
+            if (socket) {
+              stopTrade();
+            }
+            socket = io.connect(BASE_URL, {
+              reconnection: true,
+              reconnectionDelay: 2000,
+              reconnectionDelayMax: 60000,
+              reconnectionAttempts: 'Infinity',
+              timeout: 10000,
+              query: `tid=${options.tid}`,
+            });
+            socket.on('connect', () => {
+              event.reply('start-trade-reply', {
+                success: true,
+              });
+            });
+            startTrading(options, socket, mainWindow, stopTrade);
+          } catch (error) {
+            console.error(error);
             event.reply('start-trade-reply', {
-              success: true,
-            });
-          });
-          startTrading(options, socket, mainWindow, stopTrade);
-        } catch (error) {
-          console.error(error);
-          event.reply('start-trade-reply', {
-            success: false,
-            message: error.message,
-          });
-        }
-      });
-
-      ipcMain.on('stop-trade', async (event, options) => {
-        console.log('main stop-trade', options);
-        try {
-          if (socket) {
-            stopTrade();
-            event.reply('stop-trade-reply', {
-              success: true,
+              success: false,
+              message: error.message,
             });
           }
-        } catch (error) {
-          console.error(error);
-          event.reply('stop-trade-reply', {
-            success: false,
-            message: error.message,
-          });
-        }
-      });
-      ipcMain.on('logout', async (event) => {
-        stopTrade();
-        store.delete('access_token');
-        store.delete('refresh_token');
-        store.delete('userAgent');
-      });
+        });
+
+        ipcMain.on('stop-trade', async (event, options) => {
+          console.log('main stop-trade', options);
+          try {
+            if (socket) {
+              stopTrade();
+              event.reply('stop-trade-reply', {
+                success: true,
+              });
+            }
+          } catch (error) {
+            console.error(error);
+            event.reply('stop-trade-reply', {
+              success: false,
+              message: error.message,
+            });
+          }
+        });
+        ipcMain.on('logout', async (event) => {
+          stopTrade();
+          store.delete('access_token');
+          store.delete('refresh_token');
+          store.delete('userAgent');
+        });
+      }
     }
   });
 
@@ -247,14 +250,14 @@ ipcMain.on('wefinex-get-balance', async (event) => {
 
 ipcMain.on('get-trading-log', async (event, params) => {
   try {
-    const result = await db.readLogs(
-      params.username,
-      params.limit || 5,
-      params.page || 1
-    );
+    const [count, rows] = await Promise.all([
+      db.countSessions(params.username),
+      db.readLogs(params.username, params.limit || 5, params.page || 1),
+    ]);
     event.reply('get-trading-log-reply', {
       success: true,
-      data: result,
+      data: rows,
+      total: count,
     });
   } catch (error) {
     console.error(error);

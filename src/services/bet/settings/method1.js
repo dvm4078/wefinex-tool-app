@@ -26,13 +26,13 @@ const settings = {
   5: {
     signalAmount: 1,
     amount: 5,
-    winAction: 5,
+    winAction: 4,
     loseAction: 6,
   },
   6: {
     signalAmount: 1,
     amount: 8,
-    winAction: 4,
+    winAction: 5,
     loseAction: 1,
   },
 };

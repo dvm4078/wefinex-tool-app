@@ -1,4 +1,5 @@
 import * as TYPES from '../constants/app';
+import { START_TRADE } from '../constants/wefinex';
 
 const initialState = {
   loading: false,
@@ -69,6 +70,13 @@ const appReducer = (state = initialState, action) => {
         loading: false,
         balance: action.data,
         initialBalance: state.initialBalance || action.data,
+      };
+
+    case START_TRADE:
+      return {
+        ...state,
+        balance: null,
+        initialBalance: null,
       };
 
     case TYPES.UPDATE_PASSWORD_SUCCESS:

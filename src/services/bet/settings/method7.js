@@ -1,4 +1,5 @@
 const settings = {
+  isInverse: true,
   1: {
     signalAmount: 1,
     amount: 1,

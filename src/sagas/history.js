@@ -24,7 +24,7 @@ function* handleGetHistory(action) {
     };
     const response = yield getHistorySync();
     if (response.success) {
-      yield put(getHistorySuccess(response.data));
+      yield put(getHistorySuccess(response.data, response.total));
     } else {
       yield put(onError());
       notification.error({
