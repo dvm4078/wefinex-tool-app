@@ -59,7 +59,6 @@ export function* getUserInfo(action) {
   try {
     response = yield call(API.getProfile);
     if (response.ok) {
-      console.log('response', response);
       yield put(getUserInfoSuccess(response.data.data));
     } else {
       yield put(onError());
@@ -152,6 +151,7 @@ export function* loginWefinex(action) {
       });
     };
     const response = yield loginWefinexSync();
+    console.log('loginWefinex response', response);
     if (response.success) {
       const user = yield select((state) => state.app.user);
       if (response.data.nn !== (user || {}).wAccount) {
@@ -159,6 +159,7 @@ export function* loginWefinex(action) {
           message: 'Lỗi!',
           description: 'Tài khoản wefinex không hợp lệ.',
         });
+        yield put(onError());
       } else {
         yield put(loginWefinexSuccess(response.data));
       }

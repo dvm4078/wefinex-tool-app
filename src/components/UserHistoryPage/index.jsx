@@ -10,6 +10,7 @@ import numeral from 'numeral';
 import { getHistory } from '../../actions/history';
 
 const dateFormat = require('dateformat');
+const { ipcRenderer } = require('electron');
 
 const columns = [
   { title: 'Phiên', dataIndex: 'id', key: 'id' },
@@ -42,14 +43,29 @@ function UserHistoryPage(props) {
   const dispatch = useDispatch();
   const { loading, page, logs, total } = useSelector((state) => state.history);
 
+  const handleEndBet = (event, message) => {
+    dispatch(getHistory(5, page));
+  };
+
   useEffect(() => {
     dispatch(getHistory(5, 1));
+    ipcRenderer.on('end-bet', handleEndBet);
+    return () => {
+      ipcRenderer.removeListener('end-bet', handleEndBet);
+    };
   }, []);
 
   const renderLogTable = (_logs) => {
     const tableColumns = [
       { title: 'Loại', dataIndex: 'type', key: 'type' },
-      { title: 'Số tiền', dataIndex: 'amount', key: 'amount' },
+      {
+        title: 'Số tiền',
+        dataIndex: 'amount',
+        key: 'amount',
+        render: (amount) => {
+          return numeral(amount).format('0.00$');
+        },
+      },
       // { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt' },
       { title: 'Trạng thái', dataIndex: 'status', key: 'status' },
       {

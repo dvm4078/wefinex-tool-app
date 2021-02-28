@@ -17,6 +17,9 @@ db.sessions = sequelize.define(
     methodName: {
       type: Sequelize.STRING,
     },
+    username: {
+      type: Sequelize.STRING,
+    },
     // id: {
     //   type: Sequelize.INTEGER,
     //   autoIncrement: true,
@@ -76,9 +79,9 @@ db.rounds.hasMany(db.logs, { as: 'logs' });
 // db.logs.belongsTo(db.rounds, { foreignKey: 'roundId' });
 // db.rounds.belongsTo(db.sessions, { foreignKey: 'sessionId' });
 
-db.createSession = async (methodName) => {
+db.createSession = async (methodName, username) => {
   try {
-    const result = await db.sessions.create({ methodName });
+    const result = await db.sessions.create({ methodName, username });
     return result;
   } catch (error) {
     throw error;
@@ -123,10 +126,23 @@ db.updateLog = async (logId, logData) => {
   }
 };
 
-db.readLogs = async (limit, page) => {
+db.readLogs = async (username, limit, page) => {
   try {
     const offset = (page - 1) * limit;
     const results = await db.sessions.findAll({
+      where: {
+        username,
+      },
+      order: [
+        ['createdAt', 'DESC'],
+        [{ model: db.rounds, as: 'rounds' }, 'createdAt', 'DESC'],
+        [
+          { model: db.rounds, as: 'rounds' },
+          { model: db.logs, as: 'logs' },
+          'createdAt',
+          'DESC',
+        ],
+      ],
       include: {
         model: db.rounds,
         as: 'rounds',

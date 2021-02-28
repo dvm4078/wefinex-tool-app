@@ -7,6 +7,9 @@ const schema = {
   refresh_token: {
     type: 'string',
   },
+  userAgent: {
+    type: 'string',
+  },
 };
 
 const store = new Store({ schema });

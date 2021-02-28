@@ -20,6 +20,8 @@ import {
 } from '../../actions/wefinex';
 import { getBalance } from '../../actions/app';
 
+const { ipcRenderer } = require('electron');
+
 const { Option } = Select;
 
 function Dashboard(props) {
@@ -35,6 +37,7 @@ function Dashboard(props) {
   const { loading, isTrading } = useSelector((state) => state.wefinex);
 
   const [state, setState] = useState({
+    betAccountType: 'LIVE',
     methods: ['0'],
     takeProfit: false,
     takeProfitValue: 0,
@@ -70,6 +73,7 @@ function Dashboard(props) {
       const settings = JSON.parse(localStorage.getItem('SETTINGS'));
       if (settings) {
         setState({
+          betAccountType: settings.betAccountType || 'LIVE',
           methods: settings.methods || ['0'],
           takeProfit: settings.takeProfit || false,
           takeProfitValue: settings.takeProfitValue || 0,
@@ -94,9 +98,17 @@ function Dashboard(props) {
     }
   };
 
+  const handleEndBet = (event, message) => {
+    dispatch(getBalance());
+  };
+
   useEffect(() => {
     restoreSettings();
     dispatch(getBalance());
+    ipcRenderer.on('end-bet', handleEndBet);
+    return () => {
+      ipcRenderer.removeListener('end-bet', handleEndBet);
+    };
   }, []);
 
   const startTrade = async () => {
@@ -105,6 +117,7 @@ function Dashboard(props) {
         ...state,
         tid: (user.group || {}).tid,
         initialBalance: (initialBalance || {}).availableBalance,
+        username: wefinexInfo.nn,
       };
       dispatch(startTradeAction(options));
     } else {
@@ -135,6 +148,22 @@ function Dashboard(props) {
           // style={{ width: 300 }}
         >
           <Form layout="vertical">
+            <Form.Item
+              label="Tài khoản"
+              style={{ marginBottom: '15px', flexDirection: 'row' }}
+            >
+              <Select
+                style={{ marginLeft: '10px', maxWidth: '100px' }}
+                value={state.betAccountType}
+                onChange={(value) =>
+                  handleChangeOption('betAccountType', value)
+                }
+                disabled={isTrading}
+              >
+                <Option value="LIVE">Thực</Option>
+                <Option value="DEMO">Demo</Option>
+              </Select>
+            </Form.Item>
             <Form.Item
               label="Phương pháp"
               style={{ marginBottom: '15px', flexDirection: 'row' }}

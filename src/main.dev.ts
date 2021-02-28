@@ -105,10 +105,20 @@ const createWindow = async () => {
 
       let socket = null;
 
+      const stopTrade = () => {
+        if (socket) {
+          socket.close();
+          socket = null;
+        }
+      };
+
       // Trade
       ipcMain.on('start-trade', async (event, options) => {
         console.log('main start-trade', options);
         try {
+          if (socket) {
+            stopTrade();
+          }
           socket = io.connect(BASE_URL, {
             reconnection: true,
             reconnectionDelay: 2000,
@@ -117,22 +127,12 @@ const createWindow = async () => {
             timeout: 10000,
             query: `tid=${options.tid}`,
           });
-          // socket.on(
-          //   'signal',
-          //   ({ amount, type }) => console.log('amount', amount, 'type', type)
-          //   // Nhận tín hiệu sau đó bet, check kết quả, lưu log
-          // );
-          // socket.on(
-          //   'result',
-          //   ({ result }) => console.log('result', result)
-          //   // Nhận tín hiệu sau đó bet, check kết quả, lưu log
-          // );
           socket.on('connect', () => {
             event.reply('start-trade-reply', {
               success: true,
             });
           });
-          startTrading(options, socket);
+          startTrading(options, socket, mainWindow, stopTrade);
         } catch (error) {
           console.error(error);
           event.reply('start-trade-reply', {
@@ -146,11 +146,10 @@ const createWindow = async () => {
         console.log('main stop-trade', options);
         try {
           if (socket) {
-            socket.close();
+            stopTrade();
             event.reply('stop-trade-reply', {
               success: true,
             });
-            socket = null;
           }
         } catch (error) {
           console.error(error);
@@ -159,6 +158,12 @@ const createWindow = async () => {
             message: error.message,
           });
         }
+      });
+      ipcMain.on('logout', async (event) => {
+        stopTrade();
+        store.delete('access_token');
+        store.delete('refresh_token');
+        store.delete('userAgent');
       });
     }
   });
@@ -184,6 +189,12 @@ const createWindow = async () => {
 /**
  * Add event listeners...
  */
+
+app.on('before-quit', () => {
+  store.delete('access_token');
+  store.delete('refresh_token');
+  store.delete('userAgent');
+});
 
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
@@ -236,7 +247,11 @@ ipcMain.on('wefinex-get-balance', async (event) => {
 
 ipcMain.on('get-trading-log', async (event, params) => {
   try {
-    const result = await db.readLogs(params.limit || 5, params.page || 1);
+    const result = await db.readLogs(
+      params.username,
+      params.limit || 5,
+      params.page || 1
+    );
     event.reply('get-trading-log-reply', {
       success: true,
       data: result,
@@ -248,9 +263,4 @@ ipcMain.on('get-trading-log', async (event, params) => {
       message: error.message,
     });
   }
-});
-
-ipcMain.on('logout', async (event) => {
-  store.delete('access_token');
-  store.delete('refresh_token');
 });

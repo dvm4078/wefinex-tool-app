@@ -9,6 +9,7 @@ const { ipcRenderer } = require('electron');
 
 function* handleGetHistory(action) {
   try {
+    const username = yield select((state) => (state.app.wefinexInfo || {}).nn);
     const getHistorySync = () => {
       return new Promise((resolve) => {
         ipcRenderer.once('get-trading-log-reply', (_, arg) => {
@@ -17,6 +18,7 @@ function* handleGetHistory(action) {
         ipcRenderer.send('get-trading-log', {
           limit: action.limit,
           page: action.page,
+          username,
         });
       });
     };
