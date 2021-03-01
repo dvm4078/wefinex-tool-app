@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import includes from 'lodash/includes';
 
 import {
   Button,
@@ -17,6 +18,7 @@ import numeral from 'numeral';
 import {
   startTrade as startTradeAction,
   stopTrade as stopTradeAction,
+  changeOption,
 } from '../../actions/wefinex';
 import { getBalance } from '../../actions/app';
 
@@ -34,68 +36,10 @@ function Dashboard(props) {
     balance,
   } = useSelector((state) => state.app);
 
-  const { loading, isTrading } = useSelector((state) => state.wefinex);
-
-  const [state, setState] = useState({
-    betAccountType: 'LIVE',
-    methods: ['0'],
-    takeProfit: false,
-    takeProfitValue: 0,
-    betValue: 1,
-    takeProfitType: '$',
-    stopLoss: false,
-    stopLossValue: 0,
-    stopLossType: '$',
-    startWhenTakeProfitTimes: false,
-    startWhenTakeProfitTimesValue: 0,
-    startWhenStopLossTimes: false,
-    startWhenStopLossTimesValue: 0,
-    startWhenTakeProfit: false,
-    startWhenStopLoss: false,
-    saveHistory: false,
-  });
-
-  const persistSettings = (settings) => {
-    localStorage.setItem('SETTINGS', JSON.stringify(settings));
-  };
+  const { loading, isTrading, options } = useSelector((state) => state.wefinex);
 
   const handleChangeOption = (prop, value) => {
-    const newState = {
-      ...state,
-      [prop]: value,
-    };
-    setState(newState);
-    persistSettings(newState);
-  };
-
-  const restoreSettings = () => {
-    try {
-      const settings = JSON.parse(localStorage.getItem('SETTINGS'));
-      if (settings) {
-        setState({
-          betAccountType: settings.betAccountType || 'LIVE',
-          methods: settings.methods || ['0'],
-          takeProfit: settings.takeProfit || false,
-          takeProfitValue: settings.takeProfitValue || 0,
-          betValue: settings.betValue || 1,
-          takeProfitType: settings.takeProfitType || '$',
-          stopLoss: settings.stopLoss || false,
-          stopLossValue: settings.stopLossValue || 0,
-          stopLossType: settings.stopLossType || '$',
-          startWhenTakeProfitTimes: settings.startWhenTakeProfitTimes || false,
-          startWhenTakeProfitTimesValue:
-            settings.startWhenTakeProfitTimesValue || 0,
-          startWhenStopLossTimes: settings.startWhenStopLossTimes || false,
-          startWhenStopLossTimesValue:
-            settings.startWhenStopLossTimesValue || 0,
-          startWhenTakeProfit: settings.startWhenTakeProfit || false,
-          startWhenStopLoss: settings.startWhenStopLoss || false,
-          saveHistory: settings.saveHistory || false,
-        });
-      }
-    } catch (error) {
-      console.error(error);
-    }
+    dispatch(changeOption(prop, value));
   };
 
   const handleEndBet = (event, message) => {
@@ -103,7 +47,6 @@ function Dashboard(props) {
   };
 
   useEffect(() => {
-    restoreSettings();
     dispatch(getBalance());
     ipcRenderer.on('end-bet', handleEndBet);
     return () => {
@@ -112,17 +55,24 @@ function Dashboard(props) {
   }, []);
 
   const startTrade = async () => {
+    if (options.methods && !options.methods.length) {
+      notification.error({
+        message: 'Lỗi!',
+        description: 'Vui lòng chọn phương pháp đánh!',
+      });
+      return;
+    }
     if (user.group && user.group.tid) {
-      const options = {
-        ...state,
+      const settings = {
+        ...options,
         tid: (user.group || {}).tid,
         initialBalance:
-          state.betAccountType === 'LIVE'
+          options.betAccountType === 'LIVE'
             ? (initialBalance || {}).availableBalance
             : (initialBalance || {}).demoBalance,
         username: wefinexInfo.nn,
       };
-      dispatch(startTradeAction(options));
+      dispatch(startTradeAction(settings));
       dispatch(getBalance());
     } else {
       notification.error({
@@ -137,6 +87,8 @@ function Dashboard(props) {
     dispatch(stopTradeAction());
   };
 
+  const hasMethod1 = includes(options.methods, '1');
+
   return (
     <div style={{ display: 'flex', margin: '-24px' }}>
       <div
@@ -149,7 +101,7 @@ function Dashboard(props) {
         <Card
           title="Thiết lập giao dịch"
           bordered={false}
-          // style={{ width: 300 }}
+          style={{ paddingBottom: '10px' }}
         >
           <Form layout="vertical">
             <div
@@ -171,7 +123,7 @@ function Dashboard(props) {
               </p>
               <Select
                 style={{ marginLeft: '10px', maxWidth: '100px' }}
-                value={state.betAccountType}
+                value={options.betAccountType}
                 onChange={(value) =>
                   handleChangeOption('betAccountType', value)
                 }
@@ -185,7 +137,7 @@ function Dashboard(props) {
               style={{
                 marginBottom: '10px',
                 display: 'flex',
-                height: '32px',
+                minHeight: '32px',
               }}
             >
               <p
@@ -202,7 +154,7 @@ function Dashboard(props) {
                 mode="multiple"
                 allowClear
                 style={{ marginLeft: '10px', flex: 1 }}
-                value={state.methods}
+                value={options.methods}
                 onChange={(value) => handleChangeOption('methods', value)}
                 disabled={isTrading}
               >
@@ -237,78 +189,40 @@ function Dashboard(props) {
                 style={{ marginLeft: '10px', height: '32px' }}
                 min={1}
                 disabled={isTrading}
-                value={state.betValue}
+                value={options.betValue}
                 onChange={(value) => handleChangeOption('betValue', value)}
               />
             </div>
             <div
               style={{
                 marginBottom: '10px',
-                color: isTrading
-                  ? 'rgba(0, 0, 0, 0.25)'
-                  : 'rgba(0, 0, 0, 0.85)',
+                color:
+                  isTrading || !hasMethod1
+                    ? 'rgba(0, 0, 0, 0.25)'
+                    : 'rgba(0, 0, 0, 0.85)',
               }}
             >
               <Checkbox
-                disabled={isTrading}
-                checked={state.takeProfit}
+                disabled={isTrading || !hasMethod1}
+                checked={options.stopLoss}
                 onChange={(event) =>
-                  handleChangeOption('takeProfit', event.target.checked)
+                  handleChangeOption('stopLoss', event.target.checked)
                 }
                 style={{ width: '85px' }}
               >
                 Chốt lỗ
               </Checkbox>
               <InputNumber
-                disabled={isTrading}
-                value={state.takeProfitValue}
-                onChange={(value) =>
-                  handleChangeOption('takeProfitValue', value)
-                }
-                style={{ marginRight: '5px' }}
-              />{' '}
-              kiểu
-              <Radio.Group
-                disabled={isTrading}
-                style={{ marginLeft: '10px' }}
-                value={state.takeProfitType}
-                onChange={(event) =>
-                  handleChangeOption('takeProfitType', event.target.value)
-                }
-              >
-                <Radio value="%">%</Radio>
-                <Radio value="$">$</Radio>
-              </Radio.Group>
-            </div>
-            <div
-              style={{
-                marginBottom: '10px',
-                color: isTrading
-                  ? 'rgba(0, 0, 0, 0.25)'
-                  : 'rgba(0, 0, 0, 0.85)',
-              }}
-            >
-              <Checkbox
-                disabled={isTrading}
-                checked={state.stopLoss}
-                onChange={(event) =>
-                  handleChangeOption('stopLoss', event.target.checked)
-                }
-                style={{ width: '85px' }}
-              >
-                Chốt lãi
-              </Checkbox>
-              <InputNumber
-                disabled={isTrading}
-                value={state.stopLossValue}
+                disabled={isTrading || !hasMethod1}
+                value={options.stopLossValue}
                 onChange={(value) => handleChangeOption('stopLossValue', value)}
                 style={{ marginRight: '5px' }}
               />{' '}
               kiểu
               <Radio.Group
-                disabled={isTrading}
+                disabled={isTrading || !hasMethod1}
                 style={{ marginLeft: '10px' }}
-                value={state.stopLossType}
+                value={options.stopLossType}
                 onChange={(event) =>
                   handleChangeOption('stopLossType', event.target.value)
                 }
@@ -320,14 +234,56 @@ function Dashboard(props) {
             <div
               style={{
                 marginBottom: '10px',
-                color: isTrading
-                  ? 'rgba(0, 0, 0, 0.25)'
-                  : 'rgba(0, 0, 0, 0.85)',
+                color:
+                  isTrading || !hasMethod1
+                    ? 'rgba(0, 0, 0, 0.25)'
+                    : 'rgba(0, 0, 0, 0.85)',
               }}
             >
               <Checkbox
-                disabled={isTrading}
-                checked={state.startWhenTakeProfitTimes}
+                disabled={isTrading || !hasMethod1}
+                checked={options.takeProfit}
+                onChange={(event) =>
+                  handleChangeOption('takeProfit', event.target.checked)
+                }
+                style={{ width: '85px' }}
+              >
+                Chốt lãi
+              </Checkbox>
+              <InputNumber
+                disabled={isTrading || !hasMethod1}
+                value={options.takeProfitValue}
+                onChange={(value) =>
+                  handleChangeOption('takeProfitValue', value)
+                }
+                style={{ marginRight: '5px' }}
+              />{' '}
+              kiểu
+              <Radio.Group
+                disabled={isTrading || !hasMethod1}
+                style={{ marginLeft: '10px' }}
+                value={options.takeProfitType}
+                onChange={(event) =>
+                  handleChangeOption('takeProfitType', event.target.value)
+                }
+              >
+                <Radio value="%">%</Radio>
+                <Radio value="$">$</Radio>
+              </Radio.Group>
+            </div>
+
+            <div
+              style={{
+                marginBottom: '10px',
+                color:
+                  isTrading || !hasMethod1
+                    ? 'rgba(0, 0, 0, 0.25)'
+                    : 'rgba(0, 0, 0, 0.85)',
+              }}
+            >
+              <Checkbox
+                disabled={isTrading || !hasMethod1}
+                checked={options.startWhenTakeProfitTimes}
                 onChange={(event) =>
                   handleChangeOption(
                     'startWhenTakeProfitTimes',
@@ -339,9 +295,9 @@ function Dashboard(props) {
                 Bắt đầu lượt trade mới khi thắng
               </Checkbox>
               <InputNumber
-                disabled={isTrading}
+                disabled={isTrading || !hasMethod1}
                 style={{ width: '70px' }}
-                value={state.startWhenTakeProfitTimesValue}
+                value={options.startWhenTakeProfitTimesValue}
                 onChange={(value) =>
                   handleChangeOption('startWhenTakeProfitTimesValue', value)
                 }
@@ -351,14 +307,15 @@ function Dashboard(props) {
             <div
               style={{
                 marginBottom: '15px',
-                color: isTrading
-                  ? 'rgba(0, 0, 0, 0.25)'
-                  : 'rgba(0, 0, 0, 0.85)',
+                color:
+                  isTrading || !hasMethod1
+                    ? 'rgba(0, 0, 0, 0.25)'
+                    : 'rgba(0, 0, 0, 0.85)',
               }}
             >
               <Checkbox
-                disabled={isTrading}
-                checked={state.startWhenStopLossTimes}
+                disabled={isTrading || !hasMethod1}
+                checked={options.startWhenStopLossTimes}
                 onChange={(event) =>
                   handleChangeOption(
                     'startWhenStopLossTimes',
@@ -370,9 +327,9 @@ function Dashboard(props) {
                 Bắt đầu lượt trade mới khi thua
               </Checkbox>
               <InputNumber
-                disabled={isTrading}
+                disabled={isTrading || !hasMethod1}
                 style={{ width: '70px' }}
-                value={state.startWhenStopLossTimesValue}
+                value={options.startWhenStopLossTimesValue}
                 onChange={(value) =>
                   handleChangeOption('startWhenStopLossTimesValue', value)
                 }
@@ -387,8 +344,8 @@ function Dashboard(props) {
               }}
             >
               <Checkbox
-                disabled={isTrading}
-                checked={state.startWhenTakeProfit}
+                disabled={isTrading || !hasMethod1}
+                checked={options.startWhenTakeProfit}
                 onChange={(event) =>
                   handleChangeOption(
                     'startWhenTakeProfit',
@@ -406,8 +363,8 @@ function Dashboard(props) {
               }}
             >
               <Checkbox
-                disabled={isTrading}
-                checked={state.startWhenStopLoss}
+                disabled={isTrading || !hasMethod1}
+                checked={options.startWhenStopLoss}
                 onChange={(event) =>
                   handleChangeOption('startWhenStopLoss', event.target.checked)
                 }
@@ -423,8 +380,8 @@ function Dashboard(props) {
             >
               <Checkbox
                 disabled={isTrading}
-                defaultChecked={state.saveHistory}
-                checked={state.saveHistory}
+                defaultChecked={options.saveHistory}
+                checked={options.saveHistory}
                 onChange={(event) =>
                   handleChangeOption('saveHistory', event.target.checked)
                 }
@@ -495,10 +452,10 @@ function Dashboard(props) {
                 ((initialBalance || {}).demoBalance || 0)
             ).format('0.00$')}
           </p>
-          <p>
+          {/* <p>
             <b>Nhóm theo dõi: </b>
             {(user.group || {}).name}
-          </p>
+          </p> */}
         </Card>
       </div>
     </div>

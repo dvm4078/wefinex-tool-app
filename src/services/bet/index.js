@@ -15,7 +15,7 @@ const handleTrading = async (
   mainWindow,
   methodSettings,
   methodName,
-  stopTrade
+  method
 ) => {
   try {
     const {
@@ -38,10 +38,13 @@ const handleTrading = async (
       initialBalance,
       username,
     } = options;
+    let isStop = false;
 
     let isAllowBet = true;
     if (
-      (startWhenTakeProfitTimes && startWhenTakeProfitTimesValue) ||
+      (method == '1' &&
+        startWhenTakeProfitTimes &&
+        startWhenTakeProfitTimesValue) ||
       (startWhenStopLossTimes && startWhenStopLossTimesValue)
     ) {
       isAllowBet = false;
@@ -58,36 +61,25 @@ const handleTrading = async (
     let consecutiveWins = 0;
 
     let times = 1;
-    let timesWin = 0;
-    let timesLose = 0;
     let winAmount = 0;
-    // let loseAmount = 0;
-
-    let waitingResult = false;
 
     const reset = () => {
       round = null;
-      // log = null;
       times = 1;
-      timesWin = 0;
-      timesLose = 0;
-      // waitingResult = false;
       consecutiveWins = 0;
-      // winAmount = 0;
-      // loseAmount = 0;
     };
 
     const handleBet = async (type, amount) => {
       try {
-        if (!isAllowBet) {
+        if (!isAllowBet || isStop) {
           return;
         }
-        if (saveHistory && !round && session) {
-          round = await db.createRound(session.id);
-        }
         const settingOnTime = methodSettings[times];
-        const realAmount = amount * settingOnTime.amount * (betValue || 1);
+        const realAmount = settingOnTime.amount * (betValue || 1);
         if (settingOnTime.signalAmount == amount) {
+          if (saveHistory && !round && session) {
+            round = await db.createRound(session.id);
+          }
           let betType = type;
           if (methodSettings.isInverse) {
             if (type === 'UP') {
@@ -97,10 +89,9 @@ const handleTrading = async (
             }
           }
 
-          const result = await requestBet(betType, realAmount, betAccountType);
-          waitingResult = true;
+          await requestBet(betType, realAmount, betAccountType);
+          const money = 0 - parseInt(realAmount || '0');
           if (saveHistory && round) {
-            const money = 0 - parseInt(realAmount || '0');
             log = await db.createLog(
               round.id,
               betType,
@@ -109,19 +100,32 @@ const handleTrading = async (
               null,
               'waiting'
             );
+          } else {
+            log = {
+              money,
+              amount: realAmount,
+            };
           }
-          return result;
         }
       } catch (error) {
-        stopTrade();
-        mainWindow.webContents.send('trading-error', error.message);
-        throw error;
+        mainWindow.webContents.send('trading-status', {
+          error: true,
+          message: `Lỗi khi vào lệnh ${error.message}`,
+        });
       }
     };
+
     let lanThang = 0;
     let lanThua = 0;
     const handleResult = async (result) => {
       try {
+        if (methodSettings.isInverse) {
+          if (result === 'WIN') {
+            result = 'LOSE';
+          } else {
+            result = 'WIN';
+          }
+        }
         if (!isAllowBet) {
           if (result === 'WIN') {
             lanThang += 1;
@@ -147,90 +151,102 @@ const handleTrading = async (
         }
 
         const settingOnTime = methodSettings[times];
-        if (waitingResult && log) {
-          let money = log.money;
-          if (result === 'WIN') {
-            timesWin += 1;
-            money = (log.amount * 95) / 100;
+
+        if (!log) {
+          return;
+        }
+
+        /* RAW */
+        let money = log.money;
+        if (result === 'WIN') {
+          times = settingOnTime.winAction;
+          money = (log.amount * 95) / 100;
+
+          if (saveHistory && log) {
+            await db.updateLog(log.id, { status: 'success', result, money });
+            // log = null;
+          }
+
+          /* Xủ lý chốt lãi */
+          if (method == '1' && takeProfit && takeProfitValue) {
             winAmount += money;
-
-            if (saveHistory && log) {
-              await db.updateLog(log.id, { status: 'success', result, money });
-              log = null;
+            let winValue = winAmount;
+            if (takeProfitType == '%') {
+              winValue = (winValue / initialBalance) * 100;
             }
-
-            /* Xủ lý chốt lãi */
-            if (takeProfit && takeProfitValue) {
-              let winValue = winAmount;
-              if (takeProfitType == '%') {
-                winValue = (winValue / initialBalance) * 100;
+            if (winValue >= takeProfitValue) {
+              if (startWhenTakeProfit) {
+                if (saveHistory) {
+                  session = await db.createSession(methodName, username);
+                }
+                winAmount = 0;
+                reset();
+              } else {
+                isStop = true;
+                mainWindow.webContents.send('trading-status', {
+                  completeMethod: method,
+                  error: false,
+                  message: `Đã chốt lãi ${methodName}`,
+                });
               }
-              if (winValue >= takeProfitValue) {
-                if (startWhenTakeProfit) {
+            }
+          }
+          /* Kết thúc xủ lý chốt lãi */
+
+          consecutiveWins += 1;
+        } else if (result === 'LOSE') {
+          times = settingOnTime.loseAction;
+
+          if (saveHistory && log) {
+            await db.updateLog(log.id, { status: 'success', result, money });
+            // log = null;
+          }
+
+          /* Xử lý chốt lỗ */
+          if (method == '1' && stopLoss && stopLossValue) {
+            winAmount += money;
+            let lossValue = winAmount;
+            if (lossValue < 0) {
+              lossValue = Math.abs(lossValue);
+              if (stopLossType == '%') {
+                lossValue = (lossValue / initialBalance) * 100;
+              }
+              if (lossValue >= stopLossValue) {
+                if (startWhenStopLoss) {
                   if (saveHistory) {
-                    winAmount = 0;
                     session = await db.createSession(methodName, username);
                   }
+                  winAmount = 0;
                   reset();
                 } else {
-                  stopTrade();
-                }
-                // socket.close();
-              }
-            }
-            /* Kết thúc xủ lý chốt lãi */
-
-            consecutiveWins += 1;
-            times = settingOnTime.winAction;
-          } else if (result === 'LOSE') {
-            timesLose += 1;
-            winAmount -= money;
-
-            if (saveHistory && log) {
-              await db.updateLog(log.id, { status: 'success', result, money });
-              log = null;
-            }
-
-            /* Xử lý chốt lỗ */
-            if (stopLoss && stopLossValue) {
-              let lossValue = winAmount;
-              if (lossValue < 0) {
-                lossValue = Math.abs(lossValue);
-                if (stopLossType == '%') {
-                  lossValue = (lossValue / initialBalance) * 100;
-                }
-                if (lossValue >= stopLossValue) {
-                  if (startWhenStopLoss) {
-                    if (saveHistory) {
-                      winAmount = 0;
-                      session = await db.createSession(methodName, username);
-                    }
-                    reset();
-                  } else {
-                    stopTrade();
-                  }
+                  isStop = true;
+                  mainWindow.webContents.send('trading-status', {
+                    completeMethod: method,
+                    error: false,
+                    message: `Đã chốt lỗ ${methodName}`,
+                  });
                 }
               }
             }
-            /* Kết thúc xử lý chốt lỗ */
+          }
+          /* Kết thúc xử lý chốt lỗ */
 
-            consecutiveWins = 0;
-            times = settingOnTime.loseAction;
-          }
-
-          if (consecutiveWins === 2) {
-            reset();
-          }
-          if (times === 1) {
-            reset();
-          }
-          mainWindow.webContents.send('end-bet', '');
-          waitingResult = false;
+          consecutiveWins = 0;
         }
+        log = null;
+        if (consecutiveWins === 2) {
+          reset();
+        }
+        if (times === 1) {
+          reset();
+        }
+        mainWindow.webContents.send('end-bet', '');
       } catch (error) {
-        stopTrade();
-        mainWindow.webContents.send('trading-error', error.message);
-        throw error;
+        console.error(error);
+        mainWindow.webContents.send('trading-status', {
+          error: true,
+          message: `Lỗi khi xử lý kết quả ${error.message}`,
+        });
       }
     };
 
@@ -242,12 +258,14 @@ const handleTrading = async (
       handleResult(result);
     });
   } catch (error) {
-    stopTrade();
-    throw error;
+    mainWindow.webContents.send('trading-status', {
+      error: true,
+      message: `Lỗi khi khởi tạo phương pháp vào lệnh ${error.message}`,
+    });
   }
 };
 
-const startTrading = async (options, socket, mainWindow, stopTrade) => {
+const startTrading = async (options, socket, mainWindow) => {
   try {
     const { methods } = options;
 
@@ -262,7 +280,7 @@ const startTrading = async (options, socket, mainWindow, stopTrade) => {
             mainWindow,
             methodSettings,
             methodName,
-            stopTrade
+            method
           );
         }
         case '1': {
@@ -274,7 +292,7 @@ const startTrading = async (options, socket, mainWindow, stopTrade) => {
             mainWindow,
             methodSettings,
             methodName,
-            stopTrade
+            method
           );
         }
         case '2': {
@@ -286,7 +304,7 @@ const startTrading = async (options, socket, mainWindow, stopTrade) => {
             mainWindow,
             methodSettings,
             methodName,
-            stopTrade
+            method
           );
         }
         case '3': {
@@ -298,7 +316,7 @@ const startTrading = async (options, socket, mainWindow, stopTrade) => {
             mainWindow,
             methodSettings,
             methodName,
-            stopTrade
+            method
           );
         }
         case '4': {
@@ -310,7 +328,7 @@ const startTrading = async (options, socket, mainWindow, stopTrade) => {
             mainWindow,
             methodSettings,
             methodName,
-            stopTrade
+            method
           );
         }
         case '5': {
@@ -322,7 +340,7 @@ const startTrading = async (options, socket, mainWindow, stopTrade) => {
             mainWindow,
             methodSettings,
             methodName,
-            stopTrade
+            method
           );
         }
         case '6': {
@@ -334,7 +352,7 @@ const startTrading = async (options, socket, mainWindow, stopTrade) => {
             mainWindow,
             methodSettings,
             methodName,
-            stopTrade
+            method
           );
         }
         case '7': {
@@ -346,7 +364,7 @@ const startTrading = async (options, socket, mainWindow, stopTrade) => {
             mainWindow,
             methodSettings,
             methodName,
-            stopTrade
+            method
           );
         }
         default:
@@ -356,8 +374,15 @@ const startTrading = async (options, socket, mainWindow, stopTrade) => {
     const results = await Promise.all(tasks);
     return results;
   } catch (error) {
-    stopTrade();
-    throw error;
+    mainWindow.webContents.send('trading-status', {
+      forceStop: true,
+      error: true,
+      message: `Lỗi ${error.message}`,
+    });
+    if (socket) {
+      socket.close();
+      socket = null;
+    }
   }
 };
 

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { notification } from 'antd';
 
 import { HashRouter as Router } from 'react-router-dom';
@@ -10,19 +10,38 @@ import routes, { renderRoutes } from './routes';
 import Authendication from './utils/authendication';
 
 import { getUserInfo } from './actions/app';
-import { stopTradeSuccess } from './actions/wefinex';
+import { stopTradeSuccess, completeMethod } from './actions/wefinex';
 
 const { ipcRenderer } = require('electron');
 
 export default function App() {
   const dispatch = useDispatch();
+  const { currentOptions } = useSelector((state) => state.wefinex);
 
-  const handleTradingError = (event, message) => {
-    dispatch(stopTradeSuccess());
-    notification.error({
-      message: 'Lỗi!',
-      description: message,
-    });
+  const handleTradingStatus = (event, data) => {
+    if (data.error) {
+      notification.error({
+        message: 'Lỗi!',
+        description: data.message,
+      });
+    } else {
+      notification.success({
+        message: 'Thành công!',
+        description: data.message,
+      });
+    }
+    if (data.completeMethod) {
+      const methods = (currentOptions.methods || []).filter(
+        (method) => method !== data.completeMethod
+      );
+      dispatch(completeMethod(methods));
+      if (!methods.length) {
+        dispatch(stopTradeSuccess());
+      }
+    }
+    if (data.forceStop) {
+      dispatch(stopTradeSuccess());
+    }
   };
 
   useEffect(() => {
@@ -31,9 +50,9 @@ export default function App() {
       dispatch(getUserInfo());
     }
 
-    ipcRenderer.on('trading-error', handleTradingError);
+    ipcRenderer.on('trading-status', handleTradingStatus);
     return () => {
-      ipcRenderer.removeListener('trading-error', handleTradingError);
+      ipcRenderer.removeListener('trading-status', handleTradingStatus);
     };
   }, []);
 

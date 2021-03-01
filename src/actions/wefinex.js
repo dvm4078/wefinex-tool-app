@@ -22,3 +22,14 @@ export const stopTradeSuccess = (data) => ({
 export const onError = () => ({
   type: TYPES.ON_ERROR,
 });
+
+export const changeOption = (prop, value) => ({
+  type: TYPES.CHANGE_OPTION,
+  prop,
+  value,
+});
+
+export const completeMethod = (methods) => ({
+  type: TYPES.COMPLETE_METHOD,
+  methods,
+});

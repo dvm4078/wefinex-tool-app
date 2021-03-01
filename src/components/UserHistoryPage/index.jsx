@@ -66,7 +66,12 @@ function UserHistoryPage(props) {
           return numeral(amount).format('0.00$');
         },
       },
-      // { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt' },
+      {
+        title: 'Thời gian',
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+        render: (createdAt = {}) => dateFormat(createdAt, 'h:MM:ss dd-mm-yyyy'),
+      },
       { title: 'Trạng thái', dataIndex: 'status', key: 'status' },
       {
         title: 'Lãi / lỗ',

@@ -115,53 +115,34 @@ const createWindow = async () => {
 
       if (!listened) {
         listened = true;
-        ipcMain.on('start-trade', async (event, options) => {
-          console.log('main start-trade', options);
-          try {
-            if (socket) {
-              stopTrade();
-            }
-            socket = io.connect(BASE_URL, {
-              reconnection: true,
-              reconnectionDelay: 2000,
-              reconnectionDelayMax: 60000,
-              reconnectionAttempts: 'Infinity',
-              timeout: 10000,
-              query: `tid=${options.tid}`,
-            });
-            socket.on('connect', () => {
-              event.reply('start-trade-reply', {
-                success: true,
-              });
-            });
-            startTrading(options, socket, mainWindow, stopTrade);
-          } catch (error) {
-            console.error(error);
+        ipcMain.on('start-trade', (event, options) => {
+          // console.log('main start-trade', options);
+          stopTrade();
+
+          socket = io.connect(BASE_URL, {
+            reconnection: true,
+            reconnectionDelay: 2000,
+            reconnectionDelayMax: 60000,
+            reconnectionAttempts: 'Infinity',
+            timeout: 10000,
+            query: `tid=${options.tid}`,
+          });
+          socket.on('connect', () => {
             event.reply('start-trade-reply', {
-              success: false,
-              message: error.message,
+              success: true,
             });
-          }
+          });
+          startTrading(options, socket, mainWindow);
         });
 
-        ipcMain.on('stop-trade', async (event, options) => {
-          console.log('main stop-trade', options);
-          try {
-            if (socket) {
-              stopTrade();
-              event.reply('stop-trade-reply', {
-                success: true,
-              });
-            }
-          } catch (error) {
-            console.error(error);
-            event.reply('stop-trade-reply', {
-              success: false,
-              message: error.message,
-            });
-          }
+        ipcMain.on('stop-trade', (event) => {
+          stopTrade();
+          event.reply('stop-trade-reply', {
+            success: true,
+          });
         });
-        ipcMain.on('logout', async (event) => {
+
+        ipcMain.on('logout', () => {
           stopTrade();
           store.delete('access_token');
           store.delete('refresh_token');
