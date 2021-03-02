@@ -27,6 +27,7 @@ const initialState = {
     startWhenTakeProfit: settings.startWhenTakeProfit || false,
     startWhenStopLoss: settings.startWhenStopLoss || false,
     saveHistory: settings.saveHistory || false,
+    withWefinex: settings.withWefinex || false,
   },
 
   currentOptions: {},

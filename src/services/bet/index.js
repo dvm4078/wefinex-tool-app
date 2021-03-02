@@ -6,7 +6,7 @@ import method5Settings from './settings/method5';
 import method6Settings from './settings/method6';
 import method7Settings from './settings/method7';
 
-import { bet as requestBet } from '../wefinex';
+import { bet as requestBet, getBalance } from '../wefinex';
 import db from '../../database';
 
 const handleTrading = async (
@@ -37,6 +37,7 @@ const handleTrading = async (
       saveHistory,
       initialBalance,
       username,
+      withWefinex,
     } = options;
     let isStop = false;
 
@@ -161,6 +162,7 @@ const handleTrading = async (
         if (result === 'WIN') {
           times = settingOnTime.winAction;
           money = (log.amount * 95) / 100;
+          winAmount += money;
 
           if (saveHistory && log) {
             await db.updateLog(log.id, { status: 'success', result, money });
@@ -169,8 +171,16 @@ const handleTrading = async (
 
           /* Xủ lý chốt lãi */
           if (method == '1' && takeProfit && takeProfitValue) {
-            winAmount += money;
             let winValue = winAmount;
+            if (withWefinex) {
+              const balance = await getBalance();
+              if (betAccountType === 'LIVE') {
+                winValue = balance.availableBalance - initialBalance;
+              } else {
+                winValue = balance.demoBalance - initialBalance;
+              }
+            }
+
             if (takeProfitType == '%') {
               winValue = (winValue / initialBalance) * 100;
             }
@@ -195,6 +205,7 @@ const handleTrading = async (
 
           consecutiveWins += 1;
         } else if (result === 'LOSE') {
+          winAmount += money;
           times = settingOnTime.loseAction;
 
           if (saveHistory && log) {
@@ -204,8 +215,15 @@ const handleTrading = async (
 
           /* Xử lý chốt lỗ */
           if (method == '1' && stopLoss && stopLossValue) {
-            winAmount += money;
             let lossValue = winAmount;
+            if (withWefinex) {
+              const balance = await getBalance();
+              if (betAccountType === 'LIVE') {
+                lossValue = balance.availableBalance - initialBalance;
+              } else {
+                lossValue = balance.demoBalance - initialBalance;
+              }
+            }
             if (lossValue < 0) {
               lossValue = Math.abs(lossValue);
               if (stopLossType == '%') {

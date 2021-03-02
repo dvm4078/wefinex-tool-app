@@ -271,7 +271,23 @@ function Dashboard(props) {
                 <Radio value="$">$</Radio>
               </Radio.Group>
             </div>
-
+            <div
+              style={{
+                marginBottom: '10px',
+                height: '32px',
+              }}
+            >
+              <Checkbox
+                disabled={isTrading}
+                defaultChecked={options.withWefinex}
+                checked={options.withWefinex}
+                onChange={(event) =>
+                  handleChangeOption('withWefinex', event.target.checked)
+                }
+              >
+                Chốt lãi/lỗ với số dư trên sàn
+              </Checkbox>
+            </div>
             <div
               style={{
                 marginBottom: '10px',
@@ -372,6 +388,7 @@ function Dashboard(props) {
                 Bắt đầu lượt trade mới khi đạt chốt lỗ
               </Checkbox>
             </div>
+
             <div
               style={{
                 marginBottom: '10px',
