@@ -87,7 +87,7 @@ function Dashboard(props) {
     dispatch(stopTradeAction());
   };
 
-  const hasMethod1 = includes(options.methods, '1');
+  const hasMethod1 = true;
 
   return (
     <div style={{ display: 'flex', margin: '-24px' }}>
@@ -158,7 +158,7 @@ function Dashboard(props) {
                 onChange={(value) => handleChangeOption('methods', value)}
                 disabled={isTrading}
               >
-                <Option value="0">Phương pháp tổng hợp</Option>
+                {/* <Option value="0">Phương pháp tổng hợp</Option> */}
                 <Option value="1">Phương pháp 1</Option>
                 <Option value="2">Phương pháp 2</Option>
                 <Option value="3">Phương pháp 3</Option>

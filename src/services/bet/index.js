@@ -43,7 +43,7 @@ const handleTrading = async (
 
     let isAllowBet = true;
     if (
-      (method == '1' &&
+      ((withWefinex || method == '1') &&
         startWhenTakeProfitTimes &&
         startWhenTakeProfitTimesValue) ||
       (startWhenStopLossTimes && startWhenStopLossTimesValue)
@@ -170,7 +170,7 @@ const handleTrading = async (
           }
 
           /* Xủ lý chốt lãi */
-          if (method == '1' && takeProfit && takeProfitValue) {
+          if ((withWefinex || method == '1') && takeProfit && takeProfitValue) {
             let winValue = winAmount;
             if (withWefinex) {
               const balance = await getBalance();
@@ -190,6 +190,16 @@ const handleTrading = async (
                   session = await db.createSession(methodName, username);
                 }
                 winAmount = 0;
+                if (
+                  ((withWefinex || method == '1') &&
+                    startWhenTakeProfitTimes &&
+                    startWhenTakeProfitTimesValue) ||
+                  (startWhenStopLossTimes && startWhenStopLossTimesValue)
+                ) {
+                  isAllowBet = false;
+                }
+                lanThang = 0;
+                lanThua = 0;
                 reset();
               } else {
                 isStop = true;
@@ -214,7 +224,7 @@ const handleTrading = async (
           }
 
           /* Xử lý chốt lỗ */
-          if (method == '1' && stopLoss && stopLossValue) {
+          if ((withWefinex || method == '1') && stopLoss && stopLossValue) {
             let lossValue = winAmount;
             if (withWefinex) {
               const balance = await getBalance();
@@ -235,6 +245,16 @@ const handleTrading = async (
                     session = await db.createSession(methodName, username);
                   }
                   winAmount = 0;
+                  if (
+                    ((withWefinex || method == '1') &&
+                      startWhenTakeProfitTimes &&
+                      startWhenTakeProfitTimesValue) ||
+                    (startWhenStopLossTimes && startWhenStopLossTimesValue)
+                  ) {
+                    isAllowBet = false;
+                  }
+                  lanThang = 0;
+                  lanThua = 0;
                   reset();
                 } else {
                   isStop = true;
