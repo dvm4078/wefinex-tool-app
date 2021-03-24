@@ -43,7 +43,7 @@ const handleTrading = async (
 
     let isAllowBet = true;
     if (
-      ((withWefinex || method == '1') &&
+      (method == '1' &&
         startWhenTakeProfitTimes &&
         startWhenTakeProfitTimesValue) ||
       (startWhenStopLossTimes && startWhenStopLossTimesValue)
@@ -130,8 +130,10 @@ const handleTrading = async (
         if (!isAllowBet) {
           if (result === 'WIN') {
             lanThang += 1;
+            lanThua = 0;
           } else {
             lanThua += 1;
+            lanThang = 0;
           }
           if (
             startWhenTakeProfitTimes &&
@@ -202,12 +204,22 @@ const handleTrading = async (
                 lanThua = 0;
                 reset();
               } else {
-                isStop = true;
-                mainWindow.webContents.send('trading-status', {
-                  completeMethod: method,
-                  error: false,
-                  message: `Đã chốt lãi ${methodName}`,
-                });
+                if (withWefinex) {
+                  socket.close();
+                  socket = null;
+                  mainWindow.webContents.send('trading-status', {
+                    forceStop: true,
+                    error: false,
+                    message: `Đã đạt giới hạn chốt lãi`,
+                  });
+                } else {
+                  isStop = true;
+                  mainWindow.webContents.send('trading-status', {
+                    completeMethod: method,
+                    error: false,
+                    message: `Đã chốt lãi ${methodName}`,
+                  });
+                }
               }
             }
           }
@@ -257,12 +269,22 @@ const handleTrading = async (
                   lanThua = 0;
                   reset();
                 } else {
-                  isStop = true;
-                  mainWindow.webContents.send('trading-status', {
-                    completeMethod: method,
-                    error: false,
-                    message: `Đã chốt lỗ ${methodName}`,
-                  });
+                  if (withWefinex) {
+                    socket.close();
+                    socket = null;
+                    mainWindow.webContents.send('trading-status', {
+                      forceStop: true,
+                      error: false,
+                      message: `Đã đạt giới hạn chốt lỗ`,
+                    });
+                  } else {
+                    isStop = true;
+                    mainWindow.webContents.send('trading-status', {
+                      completeMethod: method,
+                      error: false,
+                      message: `Đã chốt lỗ ${methodName}`,
+                    });
+                  }
                 }
               }
             }

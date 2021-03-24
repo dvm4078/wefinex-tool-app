@@ -217,10 +217,7 @@ export const bet = async (type, amount, betAccountType) => {
         body: JSON.stringify({
           betType: type,
           betAmount: amount,
-          betAccountType:
-            betAccountType || process.env.NODE_ENV === 'development'
-              ? 'DEMO'
-              : 'LIVE',
+          betAccountType,
         }),
       }
     );
