@@ -28,26 +28,24 @@ const handleTrading = async (
       stopLoss,
       stopLossValue,
       stopLossType,
-      startWhenTakeProfitTimes,
-      startWhenTakeProfitTimesValue,
-      startWhenStopLossTimes,
-      startWhenStopLossTimesValue,
+      // startWhenTakeProfitTimes,
+      // startWhenTakeProfitTimesValue,
+      // startWhenStopLossTimes,
+      // startWhenStopLossTimesValue,
       startWhenTakeProfit,
       startWhenStopLoss,
       saveHistory,
       initialBalance,
       username,
       withWefinex,
+      riskReduction,
+      riskReductionValue,
     } = options;
     let isStop = false;
 
     let isAllowBet = true;
-    if (
-      (method == '1' &&
-        startWhenTakeProfitTimes &&
-        startWhenTakeProfitTimesValue) ||
-      (startWhenStopLossTimes && startWhenStopLossTimesValue)
-    ) {
+    if (method == '1' && riskReduction && riskReductionValue) {
+      // recheck
       isAllowBet = false;
     }
 
@@ -64,10 +62,15 @@ const handleTrading = async (
     let times = 1;
     let winAmount = 0;
 
+    let lanThang = 0;
+    let lanThua = 0;
+    let fiboNum = 0;
+
     const reset = () => {
       round = null;
       times = 1;
       consecutiveWins = 0;
+      fiboNum = 0;
     };
 
     const handleBet = async (type, amount) => {
@@ -116,8 +119,6 @@ const handleTrading = async (
       }
     };
 
-    let lanThang = 0;
-    let lanThua = 0;
     const handleResult = async (result) => {
       try {
         if (methodSettings.isInverse) {
@@ -136,21 +137,24 @@ const handleTrading = async (
             lanThang = 0;
           }
           if (
-            startWhenTakeProfitTimes &&
-            startWhenTakeProfitTimesValue &&
-            startWhenTakeProfitTimesValue == lanThang
-          ) {
-            lanThang = 0;
-            isAllowBet = true;
-          }
-          if (
-            startWhenStopLossTimes &&
-            startWhenStopLossTimesValue &&
-            startWhenStopLossTimesValue == lanThua
+            riskReduction &&
+            riskReductionValue &&
+            lanThua == methodSettings.times
           ) {
             lanThua = 0;
-            isAllowBet = true;
+            fiboNum += 1;
+            if (fiboNum == riskReductionValue) {
+              isAllowBet = true;
+            }
           }
+          // if (
+          //   startWhenStopLossTimes &&
+          //   startWhenStopLossTimesValue &&
+          //   startWhenStopLossTimesValue == lanThua
+          // ) {
+          //   lanThua = 0;
+          //   isAllowBet = true;
+          // }
         }
 
         const settingOnTime = methodSettings[times];
@@ -193,10 +197,9 @@ const handleTrading = async (
                 }
                 winAmount = 0;
                 if (
-                  ((withWefinex || method == '1') &&
-                    startWhenTakeProfitTimes &&
-                    startWhenTakeProfitTimesValue) ||
-                  (startWhenStopLossTimes && startWhenStopLossTimesValue)
+                  (withWefinex || method == '1') &&
+                  riskReduction &&
+                  riskReductionValue
                 ) {
                   isAllowBet = false;
                 }
@@ -258,10 +261,9 @@ const handleTrading = async (
                   }
                   winAmount = 0;
                   if (
-                    ((withWefinex || method == '1') &&
-                      startWhenTakeProfitTimes &&
-                      startWhenTakeProfitTimesValue) ||
-                    (startWhenStopLossTimes && startWhenStopLossTimesValue)
+                    (withWefinex || method == '1') &&
+                    riskReduction &&
+                    riskReductionValue
                   ) {
                     isAllowBet = false;
                   }

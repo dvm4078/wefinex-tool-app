@@ -35,6 +35,7 @@ const settings = {
     winAction: 5,
     loseAction: 1,
   },
+  times: 6,
 };
 
 export default settings;
