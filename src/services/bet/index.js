@@ -5,6 +5,19 @@ import method4Settings from './settings/method4';
 import method5Settings from './settings/method5';
 import method6Settings from './settings/method6';
 import method7Settings from './settings/method7';
+import method8Settings from './settings/method8';
+import method9Settings from './settings/method9';
+import method10Settings from './settings/method10';
+import method11Settings from './settings/method11';
+import method12Settings from './settings/method12';
+import method13Settings from './settings/method13';
+import method14Settings from './settings/method14';
+import method15Settings from './settings/method15';
+import method16Settings from './settings/method16';
+import method17Settings from './settings/method17';
+import method18Settings from './settings/method18';
+import method19Settings from './settings/method19';
+import method20Settings from './settings/method20';
 
 import { bet as requestBet, getBalance } from '../wefinex';
 import db from '../../database';
@@ -44,7 +57,7 @@ const handleTrading = async (
     let isStop = false;
 
     let isAllowBet = true;
-    if (method == '1' && riskReduction && riskReductionValue) {
+    if (riskReduction && riskReductionValue) {
       // recheck
       isAllowBet = false;
     }
@@ -196,11 +209,7 @@ const handleTrading = async (
                   session = await db.createSession(methodName, username);
                 }
                 winAmount = 0;
-                if (
-                  (withWefinex || method == '1') &&
-                  riskReduction &&
-                  riskReductionValue
-                ) {
+                if (riskReduction && riskReductionValue) {
                   isAllowBet = false;
                 }
                 lanThang = 0;
@@ -260,11 +269,7 @@ const handleTrading = async (
                     session = await db.createSession(methodName, username);
                   }
                   winAmount = 0;
-                  if (
-                    (withWefinex || method == '1') &&
-                    riskReduction &&
-                    riskReductionValue
-                  ) {
+                  if (riskReduction && riskReductionValue) {
                     isAllowBet = false;
                   }
                   lanThang = 0;
@@ -419,6 +424,162 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '7': {
           const methodSettings = method7Settings;
+          const methodName = 'Phương pháp 7';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '8': {
+          const methodSettings = method8Settings;
+          const methodName = 'Phương pháp 8';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '9': {
+          const methodSettings = method9Settings;
+          const methodName = 'Phương pháp 2';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '10': {
+          const methodSettings = method10Settings;
+          const methodName = 'Phương pháp 3';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '11': {
+          const methodSettings = method11Settings;
+          const methodName = 'Phương pháp 4';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '12': {
+          const methodSettings = method12Settings;
+          const methodName = 'Phương pháp 5';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '13': {
+          const methodSettings = method13Settings;
+          const methodName = 'Phương pháp 6';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '14': {
+          const methodSettings = method14Settings;
+          const methodName = 'Phương pháp 1';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '15': {
+          const methodSettings = method15Settings;
+          const methodName = 'Phương pháp 2';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '16': {
+          const methodSettings = method16Settings;
+          const methodName = 'Phương pháp 3';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '17': {
+          const methodSettings = method17Settings;
+          const methodName = 'Phương pháp 4';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '18': {
+          const methodSettings = method18Settings;
+          const methodName = 'Phương pháp 5';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '19': {
+          const methodSettings = method19Settings;
+          const methodName = 'Phương pháp 6';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '20': {
+          const methodSettings = method20Settings;
           const methodName = 'Phương pháp 7';
           return handleTrading(
             options,
