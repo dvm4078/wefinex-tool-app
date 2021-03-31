@@ -19,8 +19,29 @@ import method18Settings from './settings/method18';
 import method19Settings from './settings/method19';
 import method20Settings from './settings/method20';
 
+import riskReductionMethod1Settings from './riskReductionSettings/method1';
+import riskReductionMethod2Settings from './riskReductionSettings/method2';
+import riskReductionMethod3Settings from './riskReductionSettings/method3';
+import riskReductionMethod4Settings from './riskReductionSettings/method4';
+
 import { bet as requestBet, getBalance } from '../wefinex';
 import db from '../../database';
+
+const getRiskReductionSettings = (riskReductionMethod) => {
+  switch (riskReductionMethod) {
+    case '1':
+      return riskReductionMethod1Settings;
+    case '2':
+      return riskReductionMethod2Settings;
+    case '3':
+      return riskReductionMethod3Settings;
+    case '4':
+      return riskReductionMethod4Settings;
+
+    default:
+      break;
+  }
+};
 
 const handleTrading = async (
   options,
@@ -53,6 +74,7 @@ const handleTrading = async (
       withWefinex,
       riskReduction,
       riskReductionValue,
+      riskReductionMethod,
     } = options;
     let isStop = false;
 
@@ -75,25 +97,95 @@ const handleTrading = async (
     let times = 1;
     let winAmount = 0;
 
-    let lanThang = 0;
-    let lanThua = 0;
-    let fiboNum = 0;
+    // let lanThang = 0;
+    // let lanThua = 0;
+    // let fiboNum = 0;
 
     const reset = () => {
       round = null;
       times = 1;
       consecutiveWins = 0;
-      fiboNum = 0;
+      // fiboNum = 0;
+    };
+
+    let isVirtualBetting = false;
+
+    const riskReductionSettings = getRiskReductionSettings(riskReductionMethod);
+
+    const handleVirtualBet = (amount) => {
+      if (isAllowBet) {
+        return;
+      }
+      const settingOnTime = riskReductionSettings[times];
+      if (
+        settingOnTime.signalAmount == amount ||
+        riskReductionSettings.isInverse
+      ) {
+        isVirtualBetting = true;
+      }
+    };
+
+    let winNum = 0;
+    let loseNum = 0;
+    let fNum = 0;
+
+    const checkRiskReduction = (result) => {
+      if (!isVirtualBetting) {
+        return;
+      }
+      isVirtualBetting = false;
+      let rs = result;
+
+      if (riskReductionSettings.isInverse) {
+        if (result === 'WIN') {
+          rs = 'LOSE';
+        } else {
+          rs = 'WIN';
+        }
+      }
+
+      if (riskReductionSettings.withTime) {
+        if (rs === 'WIN') {
+          winNum += 1;
+          loseNum = 0;
+        } else {
+          winNum = 0;
+          loseNum += 1;
+        }
+        if (loseNum == riskReductionValue) {
+          isAllowBet = true;
+          loseNum = 0;
+        }
+        return;
+      }
+      if (rs === 'WIN') {
+        winNum += 1;
+        loseNum = 0;
+      } else {
+        winNum = 0;
+        loseNum += 1;
+      }
+      if (loseNum == riskReductionSettings.times) {
+        loseNum = 0;
+        fNum += 1;
+        if (fNum == riskReductionValue) {
+          fNum = 0;
+          isAllowBet = true;
+        }
+      }
     };
 
     const handleBet = async (type, amount) => {
       try {
+        handleVirtualBet(amount);
         if (!isAllowBet || isStop) {
           return;
         }
         const settingOnTime = methodSettings[times];
-        const realAmount = settingOnTime.amount * (betValue || 1);
-        if (settingOnTime.signalAmount == amount) {
+        const realAmount = methodSettings.isInverse
+          ? amount
+          : settingOnTime.amount * (betValue || 1);
+        if (settingOnTime.signalAmount == amount || methodSettings.isInverse) {
           if (saveHistory && !round && session) {
             round = await db.createRound(session.id);
           }
@@ -134,6 +226,7 @@ const handleTrading = async (
 
     const handleResult = async (result) => {
       try {
+        checkRiskReduction(result);
         if (methodSettings.isInverse) {
           if (result === 'WIN') {
             result = 'LOSE';
@@ -141,34 +234,26 @@ const handleTrading = async (
             result = 'WIN';
           }
         }
-        if (!isAllowBet) {
-          if (result === 'WIN') {
-            lanThang += 1;
-            lanThua = 0;
-          } else {
-            lanThua += 1;
-            lanThang = 0;
-          }
-          if (
-            riskReduction &&
-            riskReductionValue &&
-            lanThua == methodSettings.times
-          ) {
-            lanThua = 0;
-            fiboNum += 1;
-            if (fiboNum == riskReductionValue) {
-              isAllowBet = true;
-            }
-          }
-          // if (
-          //   startWhenStopLossTimes &&
-          //   startWhenStopLossTimesValue &&
-          //   startWhenStopLossTimesValue == lanThua
-          // ) {
-          //   lanThua = 0;
-          //   isAllowBet = true;
-          // }
-        }
+        // if (!isAllowBet) {
+        //   if (result === 'WIN') {
+        //     lanThang += 1;
+        //     lanThua = 0;
+        //   } else {
+        //     lanThua += 1;
+        //     lanThang = 0;
+        //   }
+        //   if (
+        //     riskReduction &&
+        //     riskReductionValue &&
+        //     lanThua == methodSettings.times
+        //   ) {
+        //     lanThua = 0;
+        //     fiboNum += 1;
+        //     if (fiboNum == riskReductionValue) {
+        //       isAllowBet = true;
+        //     }
+        //   }
+        // }
 
         const settingOnTime = methodSettings[times];
 
@@ -212,8 +297,8 @@ const handleTrading = async (
                 if (riskReduction && riskReductionValue) {
                   isAllowBet = false;
                 }
-                lanThang = 0;
-                lanThua = 0;
+                // lanThang = 0;
+                // lanThua = 0;
                 reset();
               } else {
                 if (withWefinex) {
@@ -272,8 +357,8 @@ const handleTrading = async (
                   if (riskReduction && riskReductionValue) {
                     isAllowBet = false;
                   }
-                  lanThang = 0;
-                  lanThua = 0;
+                  // lanThang = 0;
+                  // lanThua = 0;
                   reset();
                 } else {
                   if (withWefinex) {
@@ -352,7 +437,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '1': {
           const methodSettings = method1Settings;
-          const methodName = 'Phương pháp 1';
+          const methodName = 'QLV1 - Phương pháp 1';
           return handleTrading(
             options,
             socket,
@@ -364,7 +449,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '2': {
           const methodSettings = method2Settings;
-          const methodName = 'Phương pháp 2';
+          const methodName = 'QLV1 - Phương pháp 2';
           return handleTrading(
             options,
             socket,
@@ -376,7 +461,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '3': {
           const methodSettings = method3Settings;
-          const methodName = 'Phương pháp 3';
+          const methodName = 'QLV1 - Phương pháp 3';
           return handleTrading(
             options,
             socket,
@@ -388,7 +473,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '4': {
           const methodSettings = method4Settings;
-          const methodName = 'Phương pháp 4';
+          const methodName = 'QLV1 - Phương pháp 4';
           return handleTrading(
             options,
             socket,
@@ -400,7 +485,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '5': {
           const methodSettings = method5Settings;
-          const methodName = 'Phương pháp 5';
+          const methodName = 'QLV1 - Phương pháp 5';
           return handleTrading(
             options,
             socket,
@@ -412,7 +497,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '6': {
           const methodSettings = method6Settings;
-          const methodName = 'Phương pháp 6';
+          const methodName = 'QLV1 - Phương pháp 6';
           return handleTrading(
             options,
             socket,
@@ -424,7 +509,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '7': {
           const methodSettings = method7Settings;
-          const methodName = 'Phương pháp 7';
+          const methodName = 'QLV1 - Phương pháp 7';
           return handleTrading(
             options,
             socket,
@@ -436,7 +521,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '8': {
           const methodSettings = method8Settings;
-          const methodName = 'Phương pháp 8';
+          const methodName = 'QLV2 - Phương pháp 1';
           return handleTrading(
             options,
             socket,
@@ -448,7 +533,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '9': {
           const methodSettings = method9Settings;
-          const methodName = 'Phương pháp 2';
+          const methodName = 'QLV2 - Phương pháp 2';
           return handleTrading(
             options,
             socket,
@@ -460,7 +545,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '10': {
           const methodSettings = method10Settings;
-          const methodName = 'Phương pháp 3';
+          const methodName = 'QLV2 - Phương pháp 3';
           return handleTrading(
             options,
             socket,
@@ -472,7 +557,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '11': {
           const methodSettings = method11Settings;
-          const methodName = 'Phương pháp 4';
+          const methodName = 'QLV2 - Phương pháp 4';
           return handleTrading(
             options,
             socket,
@@ -484,7 +569,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '12': {
           const methodSettings = method12Settings;
-          const methodName = 'Phương pháp 5';
+          const methodName = 'QLV2 - Phương pháp 5';
           return handleTrading(
             options,
             socket,
@@ -496,7 +581,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '13': {
           const methodSettings = method13Settings;
-          const methodName = 'Phương pháp 6';
+          const methodName = 'QLV2 - Phương pháp 6';
           return handleTrading(
             options,
             socket,
@@ -508,7 +593,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '14': {
           const methodSettings = method14Settings;
-          const methodName = 'Phương pháp 1';
+          const methodName = 'QLV3 - Phương pháp 1';
           return handleTrading(
             options,
             socket,
@@ -520,7 +605,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '15': {
           const methodSettings = method15Settings;
-          const methodName = 'Phương pháp 2';
+          const methodName = 'QLV3 - Phương pháp 2';
           return handleTrading(
             options,
             socket,
@@ -532,7 +617,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '16': {
           const methodSettings = method16Settings;
-          const methodName = 'Phương pháp 3';
+          const methodName = 'QLV3 - Phương pháp 3';
           return handleTrading(
             options,
             socket,
@@ -544,7 +629,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '17': {
           const methodSettings = method17Settings;
-          const methodName = 'Phương pháp 4';
+          const methodName = 'QLV3 - Phương pháp 4';
           return handleTrading(
             options,
             socket,
@@ -556,7 +641,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '18': {
           const methodSettings = method18Settings;
-          const methodName = 'Phương pháp 5';
+          const methodName = 'QLV3 - Phương pháp 5';
           return handleTrading(
             options,
             socket,
@@ -568,7 +653,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '19': {
           const methodSettings = method19Settings;
-          const methodName = 'Phương pháp 6';
+          const methodName = 'QLV3 - Phương pháp 6';
           return handleTrading(
             options,
             socket,
@@ -580,7 +665,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '20': {
           const methodSettings = method20Settings;
-          const methodName = 'Phương pháp 7';
+          const methodName = 'QLV3 - Phương pháp 7';
           return handleTrading(
             options,
             socket,

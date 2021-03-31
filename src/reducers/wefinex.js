@@ -12,8 +12,8 @@ const initialState = {
   // groups: [],
   options: {
     betAccountType: settings.betAccountType || 'LIVE',
-    // methods: settings.methods || ['1'],
-    methods: [],
+    methods: settings.methods || ['1'],
+    // methods: [],
     takeProfit: settings.takeProfit || false,
     takeProfitValue: settings.takeProfitValue || 0,
     betValue: settings.betValue || 1,
@@ -31,6 +31,7 @@ const initialState = {
     withWefinex: settings.withWefinex || false,
     riskReduction: settings.riskReduction || false,
     riskReductionValue: settings.riskReductionValue || 0,
+    riskReductionMethod: settings.riskReductionMethod || '1',
   },
 
   currentOptions: {},
