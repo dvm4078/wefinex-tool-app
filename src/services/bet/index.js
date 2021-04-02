@@ -324,7 +324,7 @@ const handleTrading = async (
 
           consecutiveWins += 1;
         } else if (result === 'LOSE') {
-          winAmount += money;
+          winAmount -= money;
           times = settingOnTime.loseAction;
 
           if (saveHistory && log) {

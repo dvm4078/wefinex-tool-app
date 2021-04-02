@@ -25,6 +25,29 @@ import { getGroups } from '../../actions/group';
 
 const { ipcRenderer } = require('electron');
 
+const methods = [
+  { name: 'QLV1 - Phương pháp 1', value: '1' },
+  { name: 'QLV1 - Phương pháp 2', value: '2' },
+  { name: 'QLV1 - Phương pháp 3', value: '3' },
+  { name: 'QLV1 - Phương pháp 4', value: '4' },
+  { name: 'QLV1 - Phương pháp 5', value: '5' },
+  { name: 'QLV1 - Phương pháp 6', value: '6' },
+  { name: 'QLV2 - Phương pháp 1', value: '8' },
+  { name: 'QLV2 - Phương pháp 2', value: '9' },
+  { name: 'QLV2 - Phương pháp 3', value: '10' },
+  { name: 'QLV2 - Phương pháp 4', value: '11' },
+  { name: 'QLV2 - Phương pháp 5', value: '12' },
+  { name: 'QLV2 - Phương pháp 6', value: '13' },
+  { name: 'QLV3 - Phương pháp 1', value: '15' },
+  { name: 'QLV3 - Phương pháp 2', value: '16' },
+  { name: 'QLV3 - Phương pháp 3', value: '17' },
+  { name: 'QLV3 - Phương pháp 4', value: '18' },
+  { name: 'QLV3 - Phương pháp 5', value: '19' },
+  { name: 'QLV3 - Phương pháp 6', value: '20' },
+  { name: 'QLV4 - Phương pháp 1', value: '7' },
+  { name: 'QLV4 - Phương pháp 2', value: '14' },
+];
+
 const { Option } = Select;
 function Dashboard(props) {
   const dispatch = useDispatch();
@@ -98,6 +121,45 @@ function Dashboard(props) {
   };
 
   const hasMethod1 = true;
+
+  const riskReduction1Methods = options.methods.map((methodValue) => {
+    const method = methods.find(({ value }) => value === methodValue);
+    return method;
+  });
+
+  // const riskReduction2Methods = options.methods.map((methodValue) => {
+  //   const method =
+  //     methods.find(
+  //       ({ value }) =>
+  //         value === methodValue &&
+  //         !includes(options.riskReduction1Methods, value)
+  //     ) || [];
+  //   return method;
+  // });
+
+  // console.log('riskReduction2Methods', riskReduction2Methods);
+
+  const riskReduction2Methods = methods.filter(
+    (value) => !includes(options.riskReduction1Methods, value)
+  );
+
+  const riskReduction3Methods = options.methods.filter((value) =>
+    includes(
+      [...options.riskReduction1Methods, ...options.riskReduction2Methods],
+      value
+    )
+  );
+
+  const riskReduction4Methods = options.methods.filter((value) =>
+    includes(
+      [
+        ...options.riskReduction1Methods,
+        ...options.riskReduction2Methods,
+        ...options.riskReduction3Methods,
+      ],
+      value
+    )
+  );
 
   return (
     <div style={{ display: 'flex', margin: '-24px' }}>
@@ -179,27 +241,208 @@ function Dashboard(props) {
                 onChange={(value) => handleChangeOption('methods', value)}
                 disabled={isTrading}
               >
-                <Option value="1">QLV1 - Phương pháp 1</Option>
-                <Option value="2">QLV1 - Phương pháp 2</Option>
-                <Option value="3">QLV1 - Phương pháp 3</Option>
-                <Option value="4">QLV1 - Phương pháp 4</Option>
-                <Option value="5">QLV1 - Phương pháp 5</Option>
-                <Option value="6">QLV1 - Phương pháp 6</Option>
-                <Option value="7">QLV1 - Phương pháp 7</Option>
-                <Option value="8">QLV2 - Phương pháp 1</Option>
-                <Option value="9">QLV2 - Phương pháp 2</Option>
-                <Option value="10">QLV2 - Phương pháp 3</Option>
-                <Option value="11">QLV2 - Phương pháp 4</Option>
-                <Option value="12">QLV2 - Phương pháp 5</Option>
-                <Option value="13">QLV2 - Phương pháp 6</Option>
-                <Option value="14">QLV3 - Phương pháp 1</Option>
-                <Option value="15">QLV3 - Phương pháp 2</Option>
-                <Option value="16">QLV3 - Phương pháp 3</Option>
-                <Option value="17">QLV3 - Phương pháp 4</Option>
-                <Option value="18">QLV3 - Phương pháp 5</Option>
-                <Option value="19">QLV3 - Phương pháp 6</Option>
-                <Option value="20">QLV3 - Phương pháp 7</Option>
+                {methods.map(({ name, value }) => (
+                  <Option key={value} value={value}>
+                    {name}
+                  </Option>
+                ))}
               </Select>
+            </div>
+            <div
+              style={{
+                marginBottom: '10px',
+                display: 'flex',
+                minHeight: '32px',
+              }}
+            >
+              <p
+                style={{
+                  width: '150px',
+                  color: isTrading
+                    ? 'rgba(0, 0, 0, 0.25)'
+                    : 'rgba(0, 0, 0, 0.85)',
+                }}
+              >
+                Né thị trường xấu 1:
+              </p>
+              <Select
+                mode="multiple"
+                allowClear
+                style={{ marginLeft: '10px', flex: 1 }}
+                value={options.riskReduction1Methods}
+                onChange={(value) =>
+                  handleChangeOption('riskReduction1Methods', value)
+                }
+                disabled={isTrading}
+              >
+                {riskReduction1Methods.map(({ name, value }) => (
+                  <Option key={value} value={value}>
+                    {name}
+                  </Option>
+                ))}
+              </Select>
+              <InputNumber
+                disabled={isTrading || !hasMethod1}
+                value={options.riskReduction1Value}
+                onChange={(value) =>
+                  handleChangeOption('riskReduction1Value', value)
+                }
+                style={{
+                  maxWidth: '50px',
+                  marginLeft: '5px',
+                  marginRight: '5px',
+                  flex: 1,
+                  height: '32px',
+                }}
+              />
+              lần
+            </div>
+            <div
+              style={{
+                marginBottom: '10px',
+                display: 'flex',
+                minHeight: '32px',
+              }}
+            >
+              <p
+                style={{
+                  width: '150px',
+                  color: isTrading
+                    ? 'rgba(0, 0, 0, 0.25)'
+                    : 'rgba(0, 0, 0, 0.85)',
+                }}
+              >
+                Né thị trường xấu 2:
+              </p>
+              <Select
+                mode="multiple"
+                allowClear
+                style={{ marginLeft: '10px', flex: 1 }}
+                value={options.riskReduction2Methods}
+                onChange={(value) =>
+                  handleChangeOption('riskReduction2Methods', value)
+                }
+                disabled={isTrading}
+              >
+                {riskReduction2Methods.map(({ name, value }) => (
+                  <Option key={value} value={value}>
+                    {name}
+                  </Option>
+                ))}
+              </Select>
+              <InputNumber
+                disabled={isTrading || !hasMethod1}
+                value={options.riskReduction2Value}
+                onChange={(value) =>
+                  handleChangeOption('riskReduction2Value', value)
+                }
+                style={{
+                  maxWidth: '50px',
+                  marginLeft: '5px',
+                  marginRight: '5px',
+                  flex: 1,
+                  height: '32px',
+                }}
+              />
+              lần
+            </div>
+            <div
+              style={{
+                marginBottom: '10px',
+                display: 'flex',
+                minHeight: '32px',
+              }}
+            >
+              <p
+                style={{
+                  width: '150px',
+                  color: isTrading
+                    ? 'rgba(0, 0, 0, 0.25)'
+                    : 'rgba(0, 0, 0, 0.85)',
+                }}
+              >
+                Né thị trường xấu 3:
+              </p>
+              <Select
+                mode="multiple"
+                allowClear
+                style={{ marginLeft: '10px', flex: 1 }}
+                value={options.riskReduction3Methods}
+                onChange={(value) =>
+                  handleChangeOption('riskReduction3Methods', value)
+                }
+                disabled={isTrading}
+              >
+                {riskReduction3Methods.map(({ name, value }) => (
+                  <Option key={value} value={value}>
+                    {name}
+                  </Option>
+                ))}
+              </Select>
+              <InputNumber
+                disabled={isTrading || !hasMethod1}
+                value={options.riskReduction3Value}
+                onChange={(value) =>
+                  handleChangeOption('riskReduction3Value', value)
+                }
+                style={{
+                  maxWidth: '50px',
+                  marginLeft: '5px',
+                  marginRight: '5px',
+                  flex: 1,
+                  height: '32px',
+                }}
+              />
+              lần
+            </div>
+            <div
+              style={{
+                marginBottom: '10px',
+                display: 'flex',
+                minHeight: '32px',
+              }}
+            >
+              <p
+                style={{
+                  width: '150px',
+                  color: isTrading
+                    ? 'rgba(0, 0, 0, 0.25)'
+                    : 'rgba(0, 0, 0, 0.85)',
+                }}
+              >
+                Né thị trường xấu 4:
+              </p>
+              <Select
+                mode="multiple"
+                allowClear
+                style={{ marginLeft: '10px', flex: 1 }}
+                value={options.riskReduction4Methods}
+                onChange={(value) =>
+                  handleChangeOption('riskReduction4Methods', value)
+                }
+                disabled={isTrading}
+              >
+                {riskReduction4Methods.map(({ name, value }) => (
+                  <Option key={value} value={value}>
+                    {name}
+                  </Option>
+                ))}
+              </Select>
+              <InputNumber
+                disabled={isTrading || !hasMethod1}
+                value={options.riskReduction4Value}
+                onChange={(value) =>
+                  handleChangeOption('riskReduction4Value', value)
+                }
+                style={{
+                  maxWidth: '50px',
+                  marginLeft: '5px',
+                  marginRight: '5px',
+                  flex: 1,
+                  height: '32px',
+                }}
+              />
+              lần
             </div>
             <div
               style={{
@@ -324,82 +567,6 @@ function Dashboard(props) {
             <div
               style={{
                 marginBottom: '10px',
-                color:
-                  isTrading || !hasMethod1
-                    ? 'rgba(0, 0, 0, 0.25)'
-                    : 'rgba(0, 0, 0, 0.85)',
-              }}
-            >
-              <Checkbox
-                disabled={isTrading || !hasMethod1}
-                checked={options.riskReduction}
-                onChange={(event) =>
-                  handleChangeOption('riskReduction', event.target.checked)
-                }
-                style={{ width: '145px' }}
-              >
-                Né thị trường xấu
-              </Checkbox>
-              <Select
-                // mode="multiple"
-                // allowClear
-                style={{ width: '140px' }}
-                value={options.riskReductionMethod}
-                onChange={(value) => {
-                  handleChangeOption('riskReductionMethod', value);
-                }}
-                disabled={isTrading}
-              >
-                <Option value="1">Phương pháp 1</Option>
-                <Option value="2">Phương pháp 2</Option>
-                <Option value="3">Phương pháp 3</Option>
-              </Select>
-              <InputNumber
-                disabled={isTrading || !hasMethod1}
-                style={{ width: '70px', marginLeft: '10px' }}
-                value={options.riskReductionValue}
-                onChange={(value) =>
-                  handleChangeOption('riskReductionValue', value)
-                }
-              />{' '}
-              lần
-            </div>
-            {/* <div
-                style={{
-                  marginBottom: '15px',
-                  color:
-                    isTrading || !hasMethod1
-                      ? 'rgba(0, 0, 0, 0.25)'
-                      : 'rgba(0, 0, 0, 0.85)',
-                }}
-              >
-                <Checkbox
-                  disabled={isTrading || !hasMethod1}
-                  checked={options.startWhenStopLossTimes}
-                  onChange={(event) =>
-                    handleChangeOption(
-                      'startWhenStopLossTimes',
-                      event.target.checked
-                    )
-                  }
-                  style={{ width: '240px' }}
-                >
-                  Bắt đầu lượt trade mới khi thua
-                </Checkbox>
-                <InputNumber
-                  disabled={isTrading || !hasMethod1}
-                  style={{ width: '70px' }}
-                  value={options.startWhenStopLossTimesValue}
-                  onChange={(value) =>
-                    handleChangeOption('startWhenStopLossTimesValue', value)
-                  }
-                />{' '}
-                lần
-              </div> */}
-
-            <div
-              style={{
-                marginBottom: '10px',
                 height: '32px',
               }}
             >
@@ -514,10 +681,8 @@ function Dashboard(props) {
             ).format('0.00$')}
           </p>
           <p>
-            <b>Nhóm telegram: </b>
+            <b>Tín hiệu: </b>
             <Select
-              // mode="multiple"
-              // allowClear
               style={{ width: '100%' }}
               value={grSelected}
               onChange={(value) => {
@@ -525,7 +690,6 @@ function Dashboard(props) {
               }}
               disabled={isTrading}
             >
-              {/* <Option value="0">Phương pháp tổng hợp</Option> */}
               {groups.map(({ name, tid }) => (
                 <Option key={tid} value={tid}>
                   {name}
@@ -533,11 +697,6 @@ function Dashboard(props) {
               ))}
             </Select>
           </p>
-
-          {/* <p>
-            <b>Nhóm theo dõi: </b>
-            {(user.group || {}).name}
-          </p> */}
         </Card>
       </div>
     </div>
