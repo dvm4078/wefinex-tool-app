@@ -35,6 +35,9 @@ const initialState = {
     riskReduction3Value: settings.riskReduction3Value || 0,
     riskReduction4Methods: settings.riskReduction4Methods || [],
     riskReduction4Value: settings.riskReduction4Value || 0,
+
+    totalStopLossValue: settings.totalStopLossValue || 0,
+    totalTakeProfitValue: settings.totalTakeProfitValue || 0,
   },
 
   currentOptions: {},

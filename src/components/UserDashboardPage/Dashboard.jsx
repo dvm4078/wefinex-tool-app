@@ -46,6 +46,16 @@ const methods = [
   { name: 'QLV3 - Phương pháp 6', value: '20' },
   { name: 'QLV4 - Phương pháp 1', value: '7' },
   { name: 'QLV4 - Phương pháp 2', value: '14' },
+  { name: 'Săn rồng 2', value: '21' },
+  { name: 'Săn rồng 3', value: '22' },
+  { name: 'Săn rồng 4', value: '23' },
+  { name: 'Săn rồng 5', value: '24' },
+  { name: 'Săn rồng 6', value: '25' },
+  { name: 'Săn rồng 2 ngược', value: '26' },
+  { name: 'Săn rồng 3 ngược', value: '27' },
+  { name: 'Săn rồng 4 ngược', value: '28' },
+  { name: 'Săn rồng 5 ngược', value: '29' },
+  { name: 'Săn rồng 6 ngược', value: '30' },
 ];
 
 const { Option } = Select;
@@ -104,10 +114,9 @@ function Dashboard(props) {
             ? (initialBalance || {}).availableBalance
             : (initialBalance || {}).demoBalance,
         username: wefinexInfo.nn,
-        // type: Dashboard.tab || 1,
       };
       dispatch(startTradeAction(settings));
-      dispatch(getBalance());
+      // dispatch(getBalance());
     } else {
       notification.error({
         message: 'Lỗi!',
@@ -122,58 +131,76 @@ function Dashboard(props) {
 
   const hasMethod1 = true;
 
-  const riskReduction1Methods = options.methods.map((methodValue) => {
-    const method = methods.find(({ value }) => value === methodValue);
-    return method;
-  });
+  const getRiskReduction1Methods = () => {
+    const ortherMethods = [
+      ...options.riskReduction2Methods,
+      ...options.riskReduction3Methods,
+      ...options.riskReduction4Methods,
+    ];
+    const methodsSelected = methods.filter(({ value }) =>
+      includes(options.methods, value)
+    );
+    const availableMethods = methodsSelected.filter(
+      ({ value }) => !includes(ortherMethods, value)
+    );
+    return availableMethods;
+  };
 
-  // const riskReduction2Methods = options.methods.map((methodValue) => {
-  //   const method =
-  //     methods.find(
-  //       ({ value }) =>
-  //         value === methodValue &&
-  //         !includes(options.riskReduction1Methods, value)
-  //     ) || [];
-  //   return method;
-  // });
+  const riskReduction1Methods = getRiskReduction1Methods();
 
-  // console.log('riskReduction2Methods', riskReduction2Methods);
+  const getRiskReduction2Methods = () => {
+    const ortherMethods = [
+      ...options.riskReduction1Methods,
+      ...options.riskReduction3Methods,
+      ...options.riskReduction4Methods,
+    ];
+    const methodsSelected = methods.filter(({ value }) =>
+      includes(options.methods, value)
+    );
+    const availableMethods = methodsSelected.filter(
+      ({ value }) => !includes(ortherMethods, value)
+    );
+    return availableMethods;
+  };
 
-  const riskReduction2Methods = methods.filter(
-    (value) => !includes(options.riskReduction1Methods, value)
-  );
+  const riskReduction2Methods = getRiskReduction2Methods();
 
-  const riskReduction3Methods = options.methods.filter((value) =>
-    includes(
-      [...options.riskReduction1Methods, ...options.riskReduction2Methods],
-      value
-    )
-  );
+  const getRiskReduction3Methods = () => {
+    const ortherMethods = [
+      ...options.riskReduction1Methods,
+      ...options.riskReduction2Methods,
+      ...options.riskReduction4Methods,
+    ];
+    const methodsSelected = methods.filter(({ value }) =>
+      includes(options.methods, value)
+    );
+    const availableMethods = methodsSelected.filter(
+      ({ value }) => !includes(ortherMethods, value)
+    );
+    return availableMethods;
+  };
 
-  const riskReduction4Methods = options.methods.filter((value) =>
-    includes(
-      [
-        ...options.riskReduction1Methods,
-        ...options.riskReduction2Methods,
-        ...options.riskReduction3Methods,
-      ],
-      value
-    )
-  );
+  const riskReduction3Methods = getRiskReduction3Methods();
+
+  const getRiskReduction4Methods = () => {
+    const ortherMethods = [
+      ...options.riskReduction1Methods,
+      ...options.riskReduction2Methods,
+      ...options.riskReduction3Methods,
+    ];
+    const methodsSelected = methods.filter(({ value }) =>
+      includes(options.methods, value)
+    );
+    const availableMethods = methodsSelected.filter(
+      ({ value }) => !includes(ortherMethods, value)
+    );
+    return availableMethods;
+  };
+
+  const riskReduction4Methods = getRiskReduction4Methods();
 
   return (
     <div style={{ display: 'flex', margin: '-24px' }}>
-      <style>
-        {`
-          .ant-tabs-nav {
-            padding-top: 18px;
-            padding-left: 3px;
-          }
-          .ant-tabs-content-holder {
-            padding: 20px;
-          }
-        `}
-      </style>
       <div
         style={{
           width: '70%',
@@ -494,6 +521,15 @@ function Dashboard(props) {
                 onChange={(value) => handleChangeOption('stopLossValue', value)}
                 style={{ marginRight: '5px' }}
               />{' '}
+              Tổng
+              <InputNumber
+                disabled={isTrading || !hasMethod1}
+                value={options.totalStopLossValue}
+                onChange={(value) =>
+                  handleChangeOption('totalStopLossValue', value)
+                }
+                style={{ marginRight: '5px', marginLeft: '5px' }}
+              />{' '}
               kiểu
               <Radio.Group
                 disabled={isTrading || !hasMethod1}
@@ -533,6 +569,15 @@ function Dashboard(props) {
                   handleChangeOption('takeProfitValue', value)
                 }
                 style={{ marginRight: '5px' }}
+              />{' '}
+              Tổng
+              <InputNumber
+                disabled={isTrading || !hasMethod1}
+                value={options.totalTakeProfitValue}
+                onChange={(value) =>
+                  handleChangeOption('totalTakeProfitValue', value)
+                }
+                style={{ marginRight: '5px', marginLeft: '5px' }}
               />{' '}
               kiểu
               <Radio.Group

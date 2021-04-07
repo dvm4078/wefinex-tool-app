@@ -1,3 +1,7 @@
+import includes from 'lodash/includes';
+import values from 'lodash/values';
+import isObject from 'lodash/isObject';
+
 import method1Settings from './settings/method1';
 import method2Settings from './settings/method2';
 import method3Settings from './settings/method3';
@@ -18,6 +22,16 @@ import method17Settings from './settings/method17';
 import method18Settings from './settings/method18';
 import method19Settings from './settings/method19';
 import method20Settings from './settings/method20';
+import method21Settings from './settings/method21';
+import method22Settings from './settings/method22';
+import method23Settings from './settings/method23';
+import method24Settings from './settings/method24';
+import method25Settings from './settings/method25';
+import method26Settings from './settings/method26';
+import method27Settings from './settings/method27';
+import method28Settings from './settings/method28';
+import method29Settings from './settings/method29';
+import method30Settings from './settings/method30';
 
 import riskReductionMethod1Settings from './riskReductionSettings/method1';
 import riskReductionMethod2Settings from './riskReductionSettings/method2';
@@ -43,6 +57,42 @@ const getRiskReductionSettings = (riskReductionMethod) => {
   }
 };
 
+const checkReductionMethod = (method, options) => {
+  const {
+    riskReduction1Methods,
+    riskReduction1Value,
+    riskReduction2Methods,
+    riskReduction2Value,
+    riskReduction3Methods,
+    riskReduction3Value,
+    riskReduction4Methods,
+    riskReduction4Value,
+  } = options;
+  if (includes(riskReduction1Methods, method) && riskReduction1Value) {
+    return {
+      method: '1',
+      value: riskReduction1Value,
+    };
+  } else if (includes(riskReduction2Methods, method) && riskReduction2Value) {
+    return {
+      method: '2',
+      value: riskReduction2Value,
+    };
+  } else if (includes(riskReduction3Methods, method) && riskReduction3Value) {
+    return {
+      method: '3',
+      value: riskReduction3Value,
+    };
+  } else if (includes(riskReduction4Methods, method) && riskReduction4Value) {
+    return {
+      method: '5',
+      value: riskReduction4Value,
+    };
+  } else {
+    return {};
+  }
+};
+
 const handleTrading = async (
   options,
   socket,
@@ -62,24 +112,24 @@ const handleTrading = async (
       stopLoss,
       stopLossValue,
       stopLossType,
-      // startWhenTakeProfitTimes,
-      // startWhenTakeProfitTimesValue,
-      // startWhenStopLossTimes,
-      // startWhenStopLossTimesValue,
       startWhenTakeProfit,
       startWhenStopLoss,
       saveHistory,
       initialBalance,
       username,
       withWefinex,
-      riskReduction,
-      riskReductionValue,
-      riskReductionMethod,
+      totalStopLossValue,
+      totalTakeProfitValue,
     } = options;
     let isStop = false;
 
     let isAllowBet = true;
-    if (riskReduction && riskReductionValue) {
+
+    const {
+      method: riskReductionMethod,
+      value: riskReductionValue,
+    } = checkReductionMethod(method, options);
+    if (riskReductionMethod && riskReductionValue) {
       // recheck
       isAllowBet = false;
     }
@@ -97,15 +147,10 @@ const handleTrading = async (
     let times = 1;
     let winAmount = 0;
 
-    // let lanThang = 0;
-    // let lanThua = 0;
-    // let fiboNum = 0;
-
     const reset = () => {
       round = null;
       times = 1;
       consecutiveWins = 0;
-      // fiboNum = 0;
     };
 
     let isVirtualBetting = false;
@@ -182,10 +227,17 @@ const handleTrading = async (
           return;
         }
         const settingOnTime = methodSettings[times];
-        const realAmount = methodSettings.isInverse
-          ? amount
-          : settingOnTime.amount * (betValue || 1);
-        if (settingOnTime.signalAmount == amount || methodSettings.isInverse) {
+        let realAmount = settingOnTime.amount * (betValue || 1);
+        if (methodSettings.withSignal) {
+          const stot =
+            values(methodSettings).find(
+              (_stot) => isObject(_stot) && _stot.signalAmount === amount
+            ) || {};
+          if (stot.amount) {
+            realAmount = stot.amount;
+          }
+        }
+        if (settingOnTime.signalAmount == amount || methodSettings.withSignal) {
           if (saveHistory && !round && session) {
             round = await db.createRound(session.id);
           }
@@ -234,26 +286,6 @@ const handleTrading = async (
             result = 'WIN';
           }
         }
-        // if (!isAllowBet) {
-        //   if (result === 'WIN') {
-        //     lanThang += 1;
-        //     lanThua = 0;
-        //   } else {
-        //     lanThua += 1;
-        //     lanThang = 0;
-        //   }
-        //   if (
-        //     riskReduction &&
-        //     riskReductionValue &&
-        //     lanThua == methodSettings.times
-        //   ) {
-        //     lanThua = 0;
-        //     fiboNum += 1;
-        //     if (fiboNum == riskReductionValue) {
-        //       isAllowBet = true;
-        //     }
-        //   }
-        // }
 
         const settingOnTime = methodSettings[times];
 
@@ -267,6 +299,7 @@ const handleTrading = async (
           times = settingOnTime.winAction;
           money = (log.amount * 95) / 100;
           winAmount += money;
+          global.winAmount = global.winAmount || 0 + money;
 
           if (saveHistory && log) {
             await db.updateLog(log.id, { status: 'success', result, money });
@@ -274,8 +307,12 @@ const handleTrading = async (
           }
 
           /* Xủ lý chốt lãi */
-          if ((withWefinex || method == '1') && takeProfit && takeProfitValue) {
-            let winValue = winAmount;
+          if (
+            (withWefinex || method == '1') &&
+            takeProfit &&
+            (takeProfitValue || totalTakeProfitValue)
+          ) {
+            let winValue = totalTakeProfitValue ? global.winAmount : winAmount;
             if (withWefinex) {
               const balance = await getBalance();
               if (betAccountType === 'LIVE') {
@@ -294,13 +331,14 @@ const handleTrading = async (
                   session = await db.createSession(methodName, username);
                 }
                 winAmount = 0;
-                if (riskReduction && riskReductionValue) {
+                if (riskReductionMethod && riskReductionValue) {
                   isAllowBet = false;
                 }
                 // lanThang = 0;
                 // lanThua = 0;
                 reset();
               } else {
+                // eslint-disable-next-line
                 if (withWefinex) {
                   socket.close();
                   socket = null;
@@ -325,6 +363,7 @@ const handleTrading = async (
           consecutiveWins += 1;
         } else if (result === 'LOSE') {
           winAmount -= money;
+          global.winAmount = global.winAmount || 0 - money;
           times = settingOnTime.loseAction;
 
           if (saveHistory && log) {
@@ -333,8 +372,12 @@ const handleTrading = async (
           }
 
           /* Xử lý chốt lỗ */
-          if ((withWefinex || method == '1') && stopLoss && stopLossValue) {
-            let lossValue = winAmount;
+          if (
+            (withWefinex || method == '1') &&
+            stopLoss &&
+            (stopLossValue || totalStopLossValue)
+          ) {
+            let lossValue = totalStopLossValue ? global.winAmount : winAmount;
             if (withWefinex) {
               const balance = await getBalance();
               if (betAccountType === 'LIVE') {
@@ -354,13 +397,14 @@ const handleTrading = async (
                     session = await db.createSession(methodName, username);
                   }
                   winAmount = 0;
-                  if (riskReduction && riskReductionValue) {
+                  if (riskReductionMethod && riskReductionValue) {
                     isAllowBet = false;
                   }
                   // lanThang = 0;
                   // lanThua = 0;
                   reset();
                 } else {
+                  // eslint-disable-next-line
                   if (withWefinex) {
                     socket.close();
                     socket = null;
@@ -509,7 +553,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '7': {
           const methodSettings = method7Settings;
-          const methodName = 'QLV1 - Phương pháp 7';
+          const methodName = 'QLV4 - Phương pháp 1';
           return handleTrading(
             options,
             socket,
@@ -593,7 +637,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '14': {
           const methodSettings = method14Settings;
-          const methodName = 'QLV3 - Phương pháp 1';
+          const methodName = 'QLV4 - Phương pháp 2';
           return handleTrading(
             options,
             socket,
@@ -666,6 +710,126 @@ const startTrading = async (options, socket, mainWindow) => {
         case '20': {
           const methodSettings = method20Settings;
           const methodName = 'QLV3 - Phương pháp 7';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '21': {
+          const methodSettings = method21Settings;
+          const methodName = 'Săn rồng 2';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '22': {
+          const methodSettings = method22Settings;
+          const methodName = 'Săn rồng 3';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '23': {
+          const methodSettings = method23Settings;
+          const methodName = 'Săn rồng 4';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '24': {
+          const methodSettings = method24Settings;
+          const methodName = 'Săn rồng 5';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '25': {
+          const methodSettings = method25Settings;
+          const methodName = 'Săn rồng 6';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '26': {
+          const methodSettings = method26Settings;
+          const methodName = 'Săn rồng 2 ngược';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '27': {
+          const methodSettings = method27Settings;
+          const methodName = 'Săn rồng 3 ngược';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '28': {
+          const methodSettings = method28Settings;
+          const methodName = 'Săn rồng 4 ngược';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '29': {
+          const methodSettings = method29Settings;
+          const methodName = 'Săn rồng 5 ngược';
+          return handleTrading(
+            options,
+            socket,
+            mainWindow,
+            methodSettings,
+            methodName,
+            method
+          );
+        }
+        case '30': {
+          const methodSettings = method30Settings;
+          const methodName = 'Săn rồng 6 ngược';
           return handleTrading(
             options,
             socket,

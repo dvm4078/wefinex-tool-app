@@ -1,5 +1,6 @@
 const settings = {
   isInverse: true,
+  withSignal: true,
   1: {
     signalAmount: 1,
     amount: 1,
