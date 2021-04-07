@@ -56,10 +56,10 @@ db.logs = sequelize.define(
       type: Sequelize.STRING,
     },
     amount: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.DECIMAL,
     },
     money: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.DECIMAL,
     },
     status: {
       type: Sequelize.STRING,
