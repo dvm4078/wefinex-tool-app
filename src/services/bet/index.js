@@ -251,7 +251,7 @@ const handleTrading = async (
           }
 
           await requestBet(betType, realAmount, betAccountType);
-          const money = 0 - parseInt(realAmount || '0');
+          const money = 0 - parseFloat(realAmount || '0');
           if (saveHistory && round) {
             log = await db.createLog(
               round.id,
@@ -430,7 +430,10 @@ const handleTrading = async (
           consecutiveWins = 0;
         }
         log = null;
-        if (consecutiveWins === 2) {
+        if (
+          methodSettings.consecutiveWins &&
+          methodSettings.consecutiveWins === consecutiveWins
+        ) {
           reset();
         }
         if (times === 1) {

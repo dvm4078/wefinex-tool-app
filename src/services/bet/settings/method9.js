@@ -121,6 +121,7 @@ const settings = {
     loseAction: 1,
   },
   times: 10,
+  consecutiveWins: 2,
 };
 
 export default settings;
