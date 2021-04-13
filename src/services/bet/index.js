@@ -162,12 +162,9 @@ const handleTrading = async (
         return;
       }
       const settingOnTime = riskReductionSettings[times];
-      if (
+      isVirtualBetting =
         settingOnTime.signalAmount == amount ||
-        riskReductionSettings.isInverse
-      ) {
-        isVirtualBetting = true;
-      }
+        riskReductionSettings.withSignal;
     };
 
     let winNum = 0;
@@ -210,7 +207,7 @@ const handleTrading = async (
         winNum = 0;
         loseNum += 1;
       }
-      if (loseNum == riskReductionSettings.times) {
+      if (loseNum == riskReductionSettings.times - 1) {
         loseNum = 0;
         fNum += 1;
         if (fNum == riskReductionValue) {
