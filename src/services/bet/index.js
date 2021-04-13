@@ -228,10 +228,12 @@ const handleTrading = async (
         if (methodSettings.withSignal) {
           const stot =
             values(methodSettings).find(
-              (_stot) => isObject(_stot) && _stot.signalAmount === amount
+              (_stot) => isObject(_stot) && _stot.signalAmount == amount
             ) || {};
           if (stot.amount) {
             realAmount = stot.amount;
+          } else {
+            realAmount = amount;
           }
         }
         if (settingOnTime.signalAmount == amount || methodSettings.withSignal) {
@@ -649,7 +651,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '15': {
           const methodSettings = method15Settings;
-          const methodName = 'QLV3 - Phương pháp 2';
+          const methodName = 'QLV3 - Phương pháp 1';
           return handleTrading(
             options,
             socket,
@@ -661,7 +663,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '16': {
           const methodSettings = method16Settings;
-          const methodName = 'QLV3 - Phương pháp 3';
+          const methodName = 'QLV3 - Phương pháp 2';
           return handleTrading(
             options,
             socket,
@@ -673,7 +675,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '17': {
           const methodSettings = method17Settings;
-          const methodName = 'QLV3 - Phương pháp 4';
+          const methodName = 'QLV3 - Phương pháp 3';
           return handleTrading(
             options,
             socket,
@@ -685,7 +687,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '18': {
           const methodSettings = method18Settings;
-          const methodName = 'QLV3 - Phương pháp 5';
+          const methodName = 'QLV3 - Phương pháp 4';
           return handleTrading(
             options,
             socket,
@@ -697,7 +699,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '19': {
           const methodSettings = method19Settings;
-          const methodName = 'QLV3 - Phương pháp 6';
+          const methodName = 'QLV3 - Phương pháp 5';
           return handleTrading(
             options,
             socket,
@@ -709,7 +711,7 @@ const startTrading = async (options, socket, mainWindow) => {
         }
         case '20': {
           const methodSettings = method20Settings;
-          const methodName = 'QLV3 - Phương pháp 7';
+          const methodName = 'QLV3 - Phương pháp 6';
           return handleTrading(
             options,
             socket,

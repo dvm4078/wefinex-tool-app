@@ -35,13 +35,13 @@ const settings = {
     signalAmount: 35,
     amount: 7,
     winAction: 1,
-    loseAction: 1,
+    loseAction: 7,
   },
   7: {
     signalAmount: 72,
     amount: 11,
     winAction: 1,
-    loseAction: 1,
+    loseAction: 8,
   },
   8: {
     signalAmount: 147,
