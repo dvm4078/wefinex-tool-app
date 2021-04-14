@@ -134,6 +134,10 @@ const handleTrading = async (
       value: riskReductionValue,
       signal: riskReductionSignal,
     } = checkReductionMethod(method, options, methodSettings);
+    // console.log(
+    //   'checkReductionMethod(method, options, methodSettings)',
+    //   checkReductionMethod(method, options, methodSettings)
+    // );
     if (riskReductionMethod && riskReductionValue) {
       // recheck
       isAllowBet = false;
@@ -162,6 +166,7 @@ const handleTrading = async (
     let isVirtualBetting = false;
 
     const riskReductionSettings = getRiskReductionSettings(riskReductionMethod);
+    // console.log('riskReductionSettings', riskReductionSettings);
 
     const handleVirtualBet = (amount) => {
       if (isAllowBet) {
@@ -171,6 +176,17 @@ const handleTrading = async (
       const signalAmount = riskReductionSignal || settingOnTime.signalAmount;
       isVirtualBetting =
         signalAmount == amount || riskReductionSettings.withSignal;
+      // console.log(
+      //   '-------------------handle virtual bet-------------------------'
+      // );
+      // console.log('settingOnTime.signalAmount', settingOnTime.signalAmount);
+      // console.log('amount', amount);
+      // console.log(
+      //   ' riskReductionSettings.withSignal',
+      //   riskReductionSettings.withSignal
+      // );
+      // console.log(' isVirtualBetting', isVirtualBetting);
+      // console.log('');
     };
 
     let winNum = 0;
@@ -178,10 +194,19 @@ const handleTrading = async (
     let fNum = 0;
 
     const checkRiskReduction = (result) => {
-      const settingOnTime = riskReductionSettings[virtualTime];
+      if (isAllowBet) {
+        return;
+      }
+      // console.log(
+      //   '-------------------check risk reducation-------------------------'
+      // );
+      // console.log('riskReductionValue', riskReductionValue);
+      // console.log('isVirtualBetting', isVirtualBetting);
       if (!isVirtualBetting) {
         return;
       }
+      const settingOnTime = riskReductionSettings[virtualTime];
+      // console.log('settingOnTime', settingOnTime);
       isVirtualBetting = false;
       let rs = result;
 
@@ -193,7 +218,10 @@ const handleTrading = async (
         }
       }
 
+      // console.log('result', result);
+
       if (riskReductionSettings.withTime) {
+        // console.log('with time');
         if (rs === 'WIN') {
           winNum += 1;
           loseNum = 0;
@@ -201,7 +229,11 @@ const handleTrading = async (
           winNum = 0;
           loseNum += 1;
         }
+        // console.log('winNum', winNum);
+        // console.log('loseNum', loseNum);
+        // console.log('riskReductionValue', riskReductionValue);
         if (loseNum == riskReductionValue) {
+          // console.log('start bet');
           isAllowBet = true;
           loseNum = 0;
         }
@@ -209,19 +241,25 @@ const handleTrading = async (
       }
       if (rs === 'WIN') {
         virtualTime = settingOnTime.winAction;
+        // console.log('virtualTime', virtualTime);
       } else {
         virtualTime = settingOnTime.loseAction;
+        // console.log('virtualTime', virtualTime);
         // winNum = 0;
         // loseNum += 1;
         if (virtualTime == 1) {
           // loseNum = 0;
           fNum += 1;
+          // console.log('fNum', fNum);
+          // console.log('riskReductionValue', riskReductionValue);
           if (fNum == riskReductionValue) {
+            // console.log('start betting');
             fNum = 0;
             isAllowBet = true;
           }
         }
       }
+
       // if (loseNum == riskReductionSettings.times - 1) {
       //   loseNum = 0;
       //   fNum += 1;
