@@ -36,6 +36,7 @@ const settings = {
     loseAction: 1,
   },
   times: 6,
+  commonSignal: 35,
 };
 
 export default settings;

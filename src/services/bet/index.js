@@ -57,7 +57,7 @@ const getRiskReductionSettings = (riskReductionMethod) => {
   }
 };
 
-const checkReductionMethod = (method, options) => {
+const checkReductionMethod = (method, options, methodSettings) => {
   const {
     riskReduction1Methods,
     riskReduction1Value,
@@ -72,21 +72,25 @@ const checkReductionMethod = (method, options) => {
     return {
       method: '1',
       value: riskReduction1Value,
+      signal: methodSettings.commonSignal,
     };
   } else if (includes(riskReduction2Methods, method) && riskReduction2Value) {
     return {
       method: '2',
       value: riskReduction2Value,
+      signal: methodSettings.commonSignal,
     };
   } else if (includes(riskReduction3Methods, method) && riskReduction3Value) {
     return {
       method: '3',
       value: riskReduction3Value,
+      signal: methodSettings.commonSignal,
     };
   } else if (includes(riskReduction4Methods, method) && riskReduction4Value) {
     return {
       method: '5',
       value: riskReduction4Value,
+      signal: methodSettings.commonSignal,
     };
   } else {
     return {};
@@ -128,7 +132,8 @@ const handleTrading = async (
     const {
       method: riskReductionMethod,
       value: riskReductionValue,
-    } = checkReductionMethod(method, options);
+      signal: riskReductionSignal,
+    } = checkReductionMethod(method, options, methodSettings);
     if (riskReductionMethod && riskReductionValue) {
       // recheck
       isAllowBet = false;
@@ -145,6 +150,7 @@ const handleTrading = async (
     let consecutiveWins = 0;
 
     let times = 1;
+    let virtualTime = 1;
     let winAmount = 0;
 
     const reset = () => {
@@ -161,10 +167,10 @@ const handleTrading = async (
       if (isAllowBet) {
         return;
       }
-      const settingOnTime = riskReductionSettings[times];
+      const settingOnTime = riskReductionSettings[virtualTime];
+      const signalAmount = riskReductionSignal || settingOnTime.signalAmount;
       isVirtualBetting =
-        settingOnTime.signalAmount == amount ||
-        riskReductionSettings.withSignal;
+        signalAmount == amount || riskReductionSettings.withSignal;
     };
 
     let winNum = 0;
@@ -172,6 +178,7 @@ const handleTrading = async (
     let fNum = 0;
 
     const checkRiskReduction = (result) => {
+      const settingOnTime = riskReductionSettings[virtualTime];
       if (!isVirtualBetting) {
         return;
       }
@@ -201,20 +208,28 @@ const handleTrading = async (
         return;
       }
       if (rs === 'WIN') {
-        winNum += 1;
-        loseNum = 0;
+        virtualTime = settingOnTime.winAction;
       } else {
-        winNum = 0;
-        loseNum += 1;
-      }
-      if (loseNum == riskReductionSettings.times - 1) {
-        loseNum = 0;
-        fNum += 1;
-        if (fNum == riskReductionValue) {
-          fNum = 0;
-          isAllowBet = true;
+        virtualTime = settingOnTime.loseAction;
+        // winNum = 0;
+        // loseNum += 1;
+        if (virtualTime == 1) {
+          // loseNum = 0;
+          fNum += 1;
+          if (fNum == riskReductionValue) {
+            fNum = 0;
+            isAllowBet = true;
+          }
         }
       }
+      // if (loseNum == riskReductionSettings.times - 1) {
+      //   loseNum = 0;
+      //   fNum += 1;
+      //   if (fNum == riskReductionValue) {
+      //     fNum = 0;
+      //     isAllowBet = true;
+      //   }
+      // }
     };
 
     const handleBet = async (type, amount) => {
@@ -297,8 +312,8 @@ const handleTrading = async (
         if (result === 'WIN') {
           times = settingOnTime.winAction;
           money = (log.amount * 95) / 100;
-          winAmount += money;
-          global.winAmount = global.winAmount || 0 + money;
+          winAmount -= money;
+          global.winAmount = global.winAmount || 0 - money;
 
           if (saveHistory && log) {
             await db.updateLog(log.id, { status: 'success', result, money });
@@ -361,8 +376,8 @@ const handleTrading = async (
 
           consecutiveWins += 1;
         } else if (result === 'LOSE') {
-          winAmount -= money;
-          global.winAmount = global.winAmount || 0 - money;
+          winAmount += money;
+          global.winAmount = global.winAmount || 0 + money;
           times = settingOnTime.loseAction;
 
           if (saveHistory && log) {

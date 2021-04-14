@@ -219,14 +219,16 @@ function Dashboard(props) {
                 marginBottom: '10px',
                 display: 'flex',
                 height: '32px',
+                lineHeight: '30px',
               }}
             >
               <p
                 style={{
-                  width: '110px',
                   color: isTrading
                     ? 'rgba(0, 0, 0, 0.25)'
                     : 'rgba(0, 0, 0, 0.85)',
+                  margin: 0,
+                  width: '124px',
                 }}
               >
                 Tài khoản:{' '}
@@ -248,14 +250,16 @@ function Dashboard(props) {
                 marginBottom: '10px',
                 display: 'flex',
                 minHeight: '32px',
+                lineHeight: '30px',
               }}
             >
               <p
                 style={{
-                  width: '110px',
                   color: isTrading
                     ? 'rgba(0, 0, 0, 0.25)'
                     : 'rgba(0, 0, 0, 0.85)',
+                  margin: 0,
+                  width: '124px',
                 }}
               >
                 Phương pháp:{' '}
@@ -280,22 +284,18 @@ function Dashboard(props) {
                 marginBottom: '10px',
                 display: 'flex',
                 minHeight: '32px',
-              }}
-            >
-              <p
-                style={{
-                  width: '150px',
-                  color: isTrading
+                lineHeight: '30px',
+                color:
+                  isTrading || !hasMethod1
                     ? 'rgba(0, 0, 0, 0.25)'
                     : 'rgba(0, 0, 0, 0.85)',
-                }}
-              >
-                Né thị trường xấu 1:
-              </p>
+              }}
+            >
+              Né thị trường xấu 1:
               <Select
                 mode="multiple"
                 allowClear
-                style={{ marginLeft: '10px', flex: 1 }}
+                style={{ marginLeft: '10px', flex: 1, marginRight: '10px' }}
                 value={options.riskReduction1Methods}
                 onChange={(value) =>
                   handleChangeOption('riskReduction1Methods', value)
@@ -329,22 +329,18 @@ function Dashboard(props) {
                 marginBottom: '10px',
                 display: 'flex',
                 minHeight: '32px',
-              }}
-            >
-              <p
-                style={{
-                  width: '150px',
-                  color: isTrading
+                lineHeight: '30px',
+                color:
+                  isTrading || !hasMethod1
                     ? 'rgba(0, 0, 0, 0.25)'
                     : 'rgba(0, 0, 0, 0.85)',
-                }}
-              >
-                Né thị trường xấu 2:
-              </p>
+              }}
+            >
+              Né thị trường xấu 2:
               <Select
                 mode="multiple"
                 allowClear
-                style={{ marginLeft: '10px', flex: 1 }}
+                style={{ marginLeft: '10px', flex: 1, marginRight: '10px' }}
                 value={options.riskReduction2Methods}
                 onChange={(value) =>
                   handleChangeOption('riskReduction2Methods', value)
@@ -378,22 +374,18 @@ function Dashboard(props) {
                 marginBottom: '10px',
                 display: 'flex',
                 minHeight: '32px',
-              }}
-            >
-              <p
-                style={{
-                  width: '150px',
-                  color: isTrading
+                lineHeight: '30px',
+                color:
+                  isTrading || !hasMethod1
                     ? 'rgba(0, 0, 0, 0.25)'
                     : 'rgba(0, 0, 0, 0.85)',
-                }}
-              >
-                Né thị trường xấu 3:
-              </p>
+              }}
+            >
+              Né thị trường xấu 3:
               <Select
                 mode="multiple"
                 allowClear
-                style={{ marginLeft: '10px', flex: 1 }}
+                style={{ marginLeft: '10px', flex: 1, marginRight: '10px' }}
                 value={options.riskReduction3Methods}
                 onChange={(value) =>
                   handleChangeOption('riskReduction3Methods', value)
@@ -427,22 +419,18 @@ function Dashboard(props) {
                 marginBottom: '10px',
                 display: 'flex',
                 minHeight: '32px',
-              }}
-            >
-              <p
-                style={{
-                  width: '150px',
-                  color: isTrading
+                lineHeight: '30px',
+                color:
+                  isTrading || !hasMethod1
                     ? 'rgba(0, 0, 0, 0.25)'
                     : 'rgba(0, 0, 0, 0.85)',
-                }}
-              >
-                Né thị trường xấu 4:
-              </p>
+              }}
+            >
+              Né thị trường xấu 4:
               <Select
                 mode="multiple"
                 allowClear
-                style={{ marginLeft: '10px', flex: 1 }}
+                style={{ marginLeft: '10px', flex: 1, marginRight: '10px' }}
                 value={options.riskReduction4Methods}
                 onChange={(value) =>
                   handleChangeOption('riskReduction4Methods', value)
@@ -476,14 +464,16 @@ function Dashboard(props) {
                 marginBottom: '10px',
                 display: 'flex',
                 height: '32px',
+                lineHeight: '30px',
               }}
             >
               <p
                 style={{
-                  width: '110px',
                   color: isTrading
                     ? 'rgba(0, 0, 0, 0.25)'
                     : 'rgba(0, 0, 0, 0.85)',
+                  margin: 0,
+                  width: '124px',
                 }}
               >
                 Giá trị vào lệnh:{' '}
@@ -545,7 +535,7 @@ function Dashboard(props) {
             </div>
             <div
               style={{
-                marginBottom: '10px',
+                marginBottom: '15px',
                 color:
                   isTrading || !hasMethod1
                     ? 'rgba(0, 0, 0, 0.25)'
@@ -595,7 +585,7 @@ function Dashboard(props) {
             <div
               style={{
                 marginBottom: '10px',
-                // height: '32px',
+                height: '32px',
               }}
             >
               <Checkbox

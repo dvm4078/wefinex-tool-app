@@ -122,6 +122,7 @@ const settings = {
   },
   times: 10,
   consecutiveWins: 2,
+  commonSignal: 4,
 };
 
 export default settings;

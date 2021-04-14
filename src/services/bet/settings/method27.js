@@ -19,6 +19,7 @@ const settings = {
     loseAction: 1,
   },
   times: 3,
+  commonSignal: 1,
 };
 
 export default settings;
