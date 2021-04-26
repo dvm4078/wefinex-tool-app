@@ -72,12 +72,12 @@ const appReducer = (state = initialState, action) => {
         initialBalance: state.initialBalance || action.data,
       };
 
-    case START_TRADE:
-      return {
-        ...state,
-        balance: null,
-        initialBalance: null,
-      };
+    // case START_TRADE:
+    //   return {
+    //     ...state,
+    //     balance: null,
+    //     initialBalance: null,
+    //   };
 
     case TYPES.UPDATE_PASSWORD_SUCCESS:
     case TYPES.ON_ERROR:

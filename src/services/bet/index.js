@@ -125,6 +125,13 @@ const handleTrading = async (
       totalStopLossValue,
       totalTakeProfitValue,
     } = options;
+    const _balance = await getBalance();
+    if (betAccountType === 'LIVE') {
+      initialBalance = _balance.availableBalance;
+    } else {
+      initialBalance = _balance.demoBalance;
+    }
+
     let isStop = false;
 
     let isAllowBet = true;
@@ -233,6 +240,7 @@ const handleTrading = async (
         virtualTime = 1;
         winNum = 0;
         loseNum = 0;
+        return;
       }
 
       if (riskReductionSettings.withTime) {
