@@ -35,6 +35,7 @@ const settings = {
     winAction: 5,
     loseAction: 1,
   },
+  consecutiveWins: 2,
   times: 6,
 };
 

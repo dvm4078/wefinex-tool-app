@@ -120,6 +120,7 @@ const settings = {
     winAction: 1,
     loseAction: 1,
   },
+  consecutiveWins: 2,
   times: 10,
 };
 

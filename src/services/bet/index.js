@@ -106,7 +106,7 @@ const handleTrading = async (
   method
 ) => {
   try {
-    const {
+    let {
       betAccountType,
       methods,
       betValue,
@@ -219,16 +219,24 @@ const handleTrading = async (
       }
 
       // console.log('result', result);
+      if (rs === 'WIN') {
+        winNum += 1;
+        loseNum = 0;
+      } else {
+        winNum = 0;
+        loseNum += 1;
+      }
+      if (
+        riskReductionSettings.consecutiveWins &&
+        riskReductionSettings.consecutiveWins === winNum
+      ) {
+        virtualTime = 1;
+        winNum = 0;
+        loseNum = 0;
+      }
 
       if (riskReductionSettings.withTime) {
         // console.log('with time');
-        if (rs === 'WIN') {
-          winNum += 1;
-          loseNum = 0;
-        } else {
-          winNum = 0;
-          loseNum += 1;
-        }
         // console.log('winNum', winNum);
         // console.log('loseNum', loseNum);
         // console.log('riskReductionValue', riskReductionValue);
@@ -364,18 +372,35 @@ const handleTrading = async (
             takeProfit &&
             (takeProfitValue || totalTakeProfitValue)
           ) {
-            let winValue = totalTakeProfitValue ? global.winAmount : winAmount;
+            let winValue = winAmount;
+            // let winValue = totalTakeProfitValue ? global.winAmount : winAmount;
+            let balance;
             if (withWefinex) {
-              const balance = await getBalance();
+              balance = await getBalance();
               if (betAccountType === 'LIVE') {
                 winValue = balance.availableBalance - initialBalance;
               } else {
                 winValue = balance.demoBalance - initialBalance;
               }
             }
-
+            let globalWinAmount = global.winAmount;
             if (takeProfitType == '%') {
               winValue = (winValue / initialBalance) * 100;
+              globalWinAmount = (globalWinAmount / initialBalance) * 100;
+            }
+            if (
+              totalTakeProfitValue &&
+              globalWinAmount >= totalTakeProfitValue
+            ) {
+              global.winAmount = 0;
+              socket.close();
+              socket = null;
+              mainWindow.webContents.send('trading-status', {
+                forceStop: true,
+                error: false,
+                message: `Đã đạt giới hạn chốt lãi`,
+              });
+              return;
             }
             if (winValue >= takeProfitValue) {
               if (startWhenTakeProfit) {
@@ -389,6 +414,13 @@ const handleTrading = async (
                 // lanThang = 0;
                 // lanThua = 0;
                 reset();
+                if (withWefinex) {
+                  if (betAccountType === 'LIVE') {
+                    initialBalance = balance.availableBalance;
+                  } else {
+                    initialBalance = balance.demoBalance;
+                  }
+                }
               } else {
                 // eslint-disable-next-line
                 if (withWefinex) {
@@ -429,13 +461,33 @@ const handleTrading = async (
             stopLoss &&
             (stopLossValue || totalStopLossValue)
           ) {
-            let lossValue = totalStopLossValue ? global.winAmount : winAmount;
+            let lossValue = winAmount;
+            // let lossValue = totalStopLossValue ? global.winAmount : winAmount;
+            let balance;
             if (withWefinex) {
-              const balance = await getBalance();
+              balance = await getBalance();
               if (betAccountType === 'LIVE') {
                 lossValue = balance.availableBalance - initialBalance;
               } else {
                 lossValue = balance.demoBalance - initialBalance;
+              }
+            }
+            let globalLossAmount = global.winAmount;
+            if (totalStopLossValue && globalLossAmount < 0) {
+              globalLossAmount = Math.abs(globalLossAmount);
+              if (stopLossType == '%') {
+                globalLossAmount = (globalLossAmount / initialBalance) * 100;
+              }
+              if (globalLossAmount >= totalStopLossValue) {
+                global.winAmount = 0;
+                socket.close();
+                socket = null;
+                mainWindow.webContents.send('trading-status', {
+                  forceStop: true,
+                  error: false,
+                  message: `Đã đạt giới hạn chốt lãi`,
+                });
+                return;
               }
             }
             if (lossValue < 0) {
@@ -455,6 +507,13 @@ const handleTrading = async (
                   // lanThang = 0;
                   // lanThua = 0;
                   reset();
+                  if (withWefinex) {
+                    if (betAccountType === 'LIVE') {
+                      initialBalance = balance.availableBalance;
+                    } else {
+                      initialBalance = balance.demoBalance;
+                    }
+                  }
                 } else {
                   // eslint-disable-next-line
                   if (withWefinex) {
