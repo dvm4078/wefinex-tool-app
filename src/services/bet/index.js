@@ -123,6 +123,7 @@ const handleTrading = async (
       withWefinex,
       totalStopLossValue,
       totalTakeProfitValue,
+      initialBalance,
     } = options;
 
     let isStop = false;
@@ -336,11 +337,9 @@ const handleTrading = async (
         /* RAW */
         let money = log.money;
         if (result === 'WIN') {
+          let winValueOfBet = 0;
           times = settingOnTime.winAction;
           money = (log.amount * 95) / 100;
-          winAmount += money;
-          global.winAmount = (global.winAmount || 0) + money;
-          global.winAmount = Math.round(global.winAmount * 100) / 100;
 
           if (saveHistory && log) {
             await db.updateLog(log.id, { status: 'success', result, money });
@@ -349,30 +348,37 @@ const handleTrading = async (
 
           /* Xủ lý chốt lãi */
           if (
-            (withWefinex || method == '1') &&
+            // (withWefinex || method == '1') &&
             takeProfit &&
             (takeProfitValue || totalTakeProfitValue)
           ) {
-            let winValue = winAmount;
             let balance;
+
             if (withWefinex) {
               balance = await getBalance();
               if (betAccountType === 'LIVE') {
-                winValue =
+                winValueOfBet =
                   balance.availableBalance - (global.initialBalance || 0);
-                winValue = Math.round(winValue * 100) / 100;
                 global.initialBalance = balance.availableBalance;
               } else {
-                winValue = balance.demoBalance - (global.initialBalance || 0);
-                winValue = Math.round(winValue * 100) / 100;
+                winValueOfBet =
+                  balance.demoBalance - (global.initialBalance || 0);
                 global.initialBalance = balance.demoBalance;
               }
+            } else {
+              winValueOfBet = money;
             }
+
+            winAmount += winValueOfBet;
+            winAmount = Math.round(winAmount * 100) / 100;
+            global.winAmount = (global.winAmount || 0) + winValueOfBet;
+            global.winAmount = Math.round(global.winAmount * 100) / 100;
+
             let globalWinAmount = global.winAmount;
+            let localWinAmount = winAmount;
             if (takeProfitType == '%') {
-              winValue = (winValue / (global.initialBalance || 0)) * 100;
-              globalWinAmount =
-                (globalWinAmount / (global.initialBalance || 0)) * 100;
+              localWinAmount = (localWinAmount / (initialBalance || 0)) * 100;
+              globalWinAmount = (globalWinAmount / (initialBalance || 0)) * 100;
             }
             if (
               totalTakeProfitValue &&
@@ -388,7 +394,7 @@ const handleTrading = async (
               });
               return;
             }
-            if (winValue >= takeProfitValue) {
+            if (localWinAmount >= takeProfitValue) {
               if (startWhenTakeProfit) {
                 if (saveHistory) {
                   session = await db.createSession(methodName, username);
@@ -440,9 +446,7 @@ const handleTrading = async (
 
           consecutiveWins += 1;
         } else if (result === 'LOSE') {
-          winAmount += money;
-          global.winAmount = (global.winAmount || 0) + money;
-          global.winAmount = Math.round(global.winAmount * 100) / 100;
+          let winValueOfBet = 0;
           times = settingOnTime.loseAction;
 
           if (saveHistory && log) {
@@ -452,29 +456,37 @@ const handleTrading = async (
 
           /* Xử lý chốt lỗ */
           if (
-            (withWefinex || method == '1') &&
+            // (withWefinex || method == '1') &&
             stopLoss &&
             (stopLossValue || totalStopLossValue)
           ) {
-            let lossValue = winAmount;
             let balance;
             if (withWefinex) {
               balance = await getBalance();
               if (betAccountType === 'LIVE') {
-                lossValue =
+                winValueOfBet =
                   balance.availableBalance - (global.initialBalance || 0);
                 global.initialBalance = balance.availableBalance;
               } else {
-                lossValue = balance.demoBalance - (global.initialBalance || 0);
+                winValueOfBet =
+                  balance.demoBalance - (global.initialBalance || 0);
                 global.initialBalance = balance.demoBalance;
               }
+            } else {
+              winValueOfBet = money;
             }
+            winAmount += winValueOfBet;
+            winAmount = Math.round(winAmount * 100) / 100;
+            global.winAmount = (global.winAmount || 0) + winValueOfBet;
+            global.winAmount = Math.round(global.winAmount * 100) / 100;
+
             let globalLossAmount = global.winAmount;
+            let localLossAmount = winAmount;
             if (totalStopLossValue && globalLossAmount < 0) {
               globalLossAmount = Math.abs(globalLossAmount);
               if (stopLossType == '%') {
                 globalLossAmount =
-                  (globalLossAmount / (global.initialBalance || 0)) * 100;
+                  (globalLossAmount / (initialBalance || 0)) * 100;
               }
               if (globalLossAmount >= totalStopLossValue) {
                 global.winAmount = 0;
@@ -488,12 +500,12 @@ const handleTrading = async (
                 return;
               }
             }
-            if (lossValue < 0) {
-              lossValue = Math.abs(lossValue);
+            if (localLossAmount < 0) {
+              localLossAmount = Math.abs(localLossAmount);
               if (stopLossType == '%') {
-                lossValue = (lossValue / global.initialBalance) * 100;
+                localLossAmount = (localLossAmount / initialBalance) * 100;
               }
-              if (lossValue >= stopLossValue) {
+              if (localLossAmount >= stopLossValue) {
                 if (startWhenStopLoss) {
                   if (saveHistory) {
                     session = await db.createSession(methodName, username);

@@ -1,7 +1,7 @@
 {
   "name": "thang-long-tool",
   "productName": "thang-long-tool",
-  "version": "2.0.9",
+  "version": "2.1.0",
   "description": "Wefinex auto tool",
   "main": "./main.prod.js",
   "author": {
