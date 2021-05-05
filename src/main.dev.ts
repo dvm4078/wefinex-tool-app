@@ -136,6 +136,8 @@ const createWindow = async () => {
         });
 
         ipcMain.on('stop-trade', (event) => {
+          global.winAmount = 0;
+          global.initialBalance = 0;
           stopTrade();
           event.reply('stop-trade-reply', {
             success: true,
